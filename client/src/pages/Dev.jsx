@@ -57,7 +57,7 @@ const Dev = () => {
       <section className="flex flex-col items-center px-5 py-10">
         <h1 className="text-3xl font-bold mb-2">Meet Our Developers</h1>
         <p className="text-gray-600 mb-10 text-center">
-          The talented team behind the Coding Tracker
+          The talented team behind the Code Tracker
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 p-6 max-w-7xl" data-aos="fade-up">
@@ -85,7 +85,7 @@ const Dev = () => {
                     href={dev.github}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center bg-gray-200 py-2 px-3 rounded-md text-sm text-gray-700 hover:text-black"
+                    className="flex items-center bg-gray-200 py-2 px-3 rounded-md text-xs md:text-sm text-gray-700 hover:text-black"
                   >
                     <FaGithub className="mr-1" /> GitHub Profile
                   </a>
@@ -93,7 +93,7 @@ const Dev = () => {
                     href={dev.linkedin}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center bg-gray-200 py-2 px-3 rounded-md text-sm text-gray-700 hover:text-black"
+                    className="flex items-center bg-gray-200 py-2 px-3 rounded-md text-xs md:text-sm text-gray-700 hover:text-black"
                   >
                     <FaLinkedin className="mr-1" /> LinkedIn Profile
                   </a>

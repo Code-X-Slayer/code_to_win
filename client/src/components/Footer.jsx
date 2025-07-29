@@ -1,6 +1,6 @@
 import React from "react";
 import { FaRegEnvelope } from "react-icons/fa6";
-import { FiGithub, FiLinkedin } from "react-icons/fi";
+import { FiGithub, FiLinkedin, FiYoutube } from "react-icons/fi";
 import { NavLink } from "react-router-dom";
 
 const Footer = () => {
@@ -17,8 +17,8 @@ const Footer = () => {
             multiple platforms.
           </p>
           <div className="flex space-x-4 mt-4 text-xl">
-            <a href="#" aria-label="GitHub" className="hover:text-[#FFFFFF]">
-              <FiGithub />
+            <a href="https://www.youtube.com/@adityauniversity" aria-label="Youtude" className="hover:text-[#FFFFFF]">
+              <FiYoutube/>
             </a>
             <a href="https://www.linkedin.com/school/adityauniversity/" aria-label="LinkedIn" className="hover:text-[#FFFFFF]">
               <FiLinkedin />
