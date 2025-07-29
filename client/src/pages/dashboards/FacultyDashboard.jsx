@@ -117,7 +117,7 @@ function FacultyDashboard() {
               )}
 
               {selectedTab === "StudentManagment" && (
-                <div className="bg-white p-2 md:p-6 rounded-lg shadow overflow-x-auto">
+                  <div className="bg-white p-2 md:p-6 rounded-lg shadow overflow-x-scroll">
                   <h2 className="text-xl font-semibold mb-4">
                     Student Management
                   </h2>
@@ -132,7 +132,7 @@ function FacultyDashboard() {
                       </>
                     }
                     >
-                      <div>
+                      <div className="overflow-x-scroll md:overflow-hidden">
                     <StudentTable
                       students={memoizedStudents}
                       showBranch={true}

@@ -32,12 +32,7 @@ router.get("/overall", async (req, res) => {
     // First query: Get student rankings with score calculation
     const [rows] = await db.query(
       `SELECT 
-  sp.student_id, 
-  sp.name,
-  sp.dept_code,
-  sp.year,
-  sp.section,
-  sp.overall_rank,
+  sp.*,
   d.dept_name, 
   ${scoreExpr.replace(/p\.(\w+)/g, (match, metric) => {
     if (metric.includes("_lc"))

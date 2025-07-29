@@ -79,12 +79,13 @@ function StudentManagementTab({
   setSelectedStudent,
 }) {
   return (
-    <div className="bg-white rounded-lg shadow overflow-hidden min-w-full">
+    <div className="bg-white rounded-lg shadow overflow-hidden min-w-full p-5">
       <h2 className="text-xl font-semibold mb-4">Student Management</h2>
       <p className="text-gray-500 mb-4">
         Manage student records, update details, and more.
       </p>
-      <div className="flex gap-4 mb-4 items-end ">
+      <div className="flex gap-4 mb-4 items-end justify-between p-5">
+        <div className="flex gap-5">
         <div>
           <label className="block text-sm font-medium mb-1">Year</label>
           <select
@@ -114,6 +115,7 @@ function StudentManagementTab({
               </option>
             ))}
           </select>
+          </div>
         </div>
         <div className="relative mt-5">
           <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4 opacity-85 text-blue-800" />
@@ -133,7 +135,7 @@ function StudentManagementTab({
           </div>
         }
       >
-        <div className="overflow-scroll">
+        <div className="overflow-x-scroll md:overflow-hidden">
         <StudentTable
           students={filteredStudents}
           showBranch={true}

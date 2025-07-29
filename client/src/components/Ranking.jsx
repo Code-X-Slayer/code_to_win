@@ -8,6 +8,7 @@ import { FaDownload } from "react-icons/fa6";
 import { IoIosSync } from "react-icons/io";
 import * as XLSX from "xlsx";
 import dayjs from "dayjs";
+import Pagination from "./ui/Pagination";
 
 const RankBadge = ({ rank }) => {
   if (rank === 1)
@@ -20,18 +21,20 @@ const RankBadge = ({ rank }) => {
 };
 
 const TOP_X_OPTIONS = [
-  { label: "25 per page", value: 25 },
-  { label: "50 per page", value: 50 },
-  { label: "100 per page", value: 100 },
-  { label: "200 per page", value: 200 },
-  { label: "500 per page", value: 500 },
+  { label: "All Students", value: "" },
+  { label: "Top 5", value: 5 },
+  { label: "Top 10", value: 10 },
+  { label: "Top 25", value: 25 },
+  { label: "Top 50", value: 50 },
+  { label: "Top 100", value: 100 },
 ];
 
 const RankingTable = ({ filter }) => {
   const [ranks, setRanks] = useState([]);
+  const [allRanks, setAllRanks] = useState([]);
   const [pagination, setPagination] = useState({
     page: 1,
-    limit: 100,
+    limit: 50,
     totalStudents: 0,
     totalPages: 0,
   });
@@ -46,12 +49,23 @@ const RankingTable = ({ filter }) => {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const { depts, years, sections } = useMeta();
 
-  const fetchRanks = async () => {
+  const fetchRanks = async (forDownload = false) => {
     try {
       setLoading(true);
-      let params = { ...filters, page: pagination.page };
-      if (topX) params.limit = topX;
-      else params.limit = pagination.limit;
+      let params = { ...filters };
+
+      if (!forDownload) {
+        if (topX) {
+          params.limit = topX;
+        } else {
+          params.page = pagination.page;
+          params.limit = pagination.limit;
+        }
+      } else if (forDownload && topX) {
+        params.limit = topX;
+      }
+
+      if (search) params.search = search;
 
       // Build query string
       const queryString = Object.entries(params)
@@ -60,7 +74,7 @@ const RankingTable = ({ filter }) => {
         .join("&");
 
       let url;
-      if (!filters.dept && !filters.year && !filters.section) {
+      if (!filters.dept && !filters.year && !filters.section && !search) {
         url = `/api/ranking/overall${queryString ? "?" + queryString : ""}`;
       } else {
         url = `/api/ranking/filter${queryString ? "?" + queryString : ""}`;
@@ -70,26 +84,32 @@ const RankingTable = ({ filter }) => {
       if (!res.ok) throw new Error("Failed to fetch rankings");
       const data = await res.json();
 
-      // Update state with the new data structure
-      setRanks(data.students || []);
-      setPagination(
-        data.pagination || {
-          page: 1,
-          limit: 100,
-          totalStudents: 0,
-          totalPages: 0,
-        }
-      );
+      if (forDownload) {
+        setAllRanks(data.students || []);
+      } else {
+        setRanks(data.students || []);
+        setPagination(
+          data.pagination || {
+            page: 1,
+            limit: 100,
+            totalStudents: 0,
+            totalPages: 0,
+          }
+        );
+      }
     } catch (err) {
       console.error(err);
-      setRanks([]);
+      if (!forDownload) setRanks([]);
     } finally {
       setLoading(false);
     }
   };
   useEffect(() => {
-    fetchRanks();
-  }, [JSON.stringify(filters), topX, pagination.page]);
+    const timeoutId = setTimeout(() => {
+      fetchRanks();
+    }, search ? 300 : 0);
+    return () => clearTimeout(timeoutId);
+  }, [JSON.stringify(filters), topX ? 1 : pagination.page, search, topX]);
 
   const handleChange = (key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
@@ -97,24 +117,12 @@ const RankingTable = ({ filter }) => {
     setPagination((prev) => ({ ...prev, page: 1 }));
   };
 
-  // Handle search - if using server-side search
   const handleSearch = (e) => {
     setSearch(e.target.value);
-    // Reset to first page when searching
-    if (pagination.page !== 1) {
-      setPagination((prev) => ({ ...prev, page: 1 }));
-    }
+    setPagination((prev) => ({ ...prev, page: 1 }));
   };
 
-  // For client-side filtering when needed
-  const filteredRanks =
-    search.length > 0
-      ? ranks.filter(
-          (s) =>
-            s.name?.toLowerCase().includes(search.toLowerCase()) ||
-            s.student_id?.toLowerCase().includes(search.toLowerCase())
-        )
-      : ranks;
+  const filteredRanks = ranks;
 
   // Function to trigger manual ranking update
   const updateRankings = async () => {
@@ -145,8 +153,9 @@ const RankingTable = ({ filter }) => {
     }
   };
 
-  const downloadSampleXLSX = () => {
-    // 1. Simulate a large dataset
+  const downloadSampleXLSX = async () => {
+    await fetchRanks(true);
+
     const largeData = [];
     largeData.push([
       "Student Id",
@@ -173,7 +182,7 @@ const RankingTable = ({ filter }) => {
       "Score",
     ]);
 
-    filteredRanks.forEach((rank) => {
+    allRanks.forEach((rank) => {
       largeData.push([
         rank.student_id,
         rank.name,
@@ -208,7 +217,7 @@ const RankingTable = ({ filter }) => {
     const filenamePrefix =
       `${deptName || ""}${filters?.year ? " " + filters.year + "_year" : ""}${
         filters?.section ? " " + filters.section + "_sec" : ""
-      }`.trim() || "overall";
+        } ${filter.topX ? "" + filter.topX + "_top" : ""}`.trim() || "overall";
     // 2. Convert array of arrays to worksheet
     const worksheet = XLSX.utils.aoa_to_sheet(largeData);
 
@@ -255,7 +264,7 @@ const RankingTable = ({ filter }) => {
         {filter && (
           <>
             <div className="flex flex-wrap justify-between gap-2 mb-6">
-              <div className="grid grid-cols-3 md:grid-cols-4  items-center gap-4 text-sm ">
+              <div className="grid grid-cols-4 items-center gap-4 text-sm ">
                 <div>
                   <label
                     className="block text-xs font-semibold text-gray-500 mb-1"
@@ -324,19 +333,14 @@ const RankingTable = ({ filter }) => {
                     className="block text-xs font-semibold text-gray-500 mb-1"
                     htmlFor="topx"
                   >
-                    Page Size
+                    Show
                   </label>
                   <select
                     id="topx"
                     value={topX}
                     onChange={(e) => {
                       setTopX(e.target.value);
-                      // Reset to page 1 when changing page size
-                      setPagination((prev) => ({
-                        ...prev,
-                        page: 1,
-                        limit: Number(e.target.value) || 100,
-                      }));
+                      setPagination((prev) => ({ ...prev, page: 1 }));
                     }}
                     className="border border-gray-300 hover:bg-blue-50 p-2 rounded-lg transition outline-none"
                   >
@@ -449,50 +453,15 @@ const RankingTable = ({ filter }) => {
           </tbody>
         </table>
 
-        {/* Pagination Controls */}
-        {ranks.length > 0 && (
-          <div className="flex justify-between items-center mt-4 px-4 py-2">
-            <div className="text-sm text-gray-600">
-              Showing {ranks.length} of {pagination.totalStudents} students
-            </div>
-            <div className="flex space-x-2">
-              <button
-                onClick={() =>
-                  setPagination((prev) => ({
-                    ...prev,
-                    page: Math.max(1, prev.page - 1),
-                  }))
-                }
-                disabled={pagination.page <= 1 || loading}
-                className={`px-3 py-1 rounded ${
-                  pagination.page <= 1 || loading
-                    ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                    : "bg-blue-600 text-white hover:bg-blue-700"
-                }`}
-              >
-                Previous
-              </button>
-              <span className="px-3 py-1 bg-gray-100 rounded">
-                Page {pagination.page} of {pagination.totalPages || 1}
-              </span>
-              <button
-                onClick={() =>
-                  setPagination((prev) => ({
-                    ...prev,
-                    page: Math.min(pagination.totalPages, prev.page + 1),
-                  }))
-                }
-                disabled={pagination.page >= pagination.totalPages || loading}
-                className={`px-3 py-1 rounded ${
-                  pagination.page >= pagination.totalPages || loading
-                    ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                    : "bg-blue-600 text-white hover:bg-blue-700"
-                }`}
-              >
-                Next
-              </button>
-            </div>
-          </div>
+        {!topX && (
+          <Pagination
+            currentPage={pagination.page}
+            totalPages={pagination.totalPages}
+            totalItems={pagination.totalStudents}
+            itemsPerPage={ranks.length}
+            onPageChange={(page) => setPagination(prev => ({ ...prev, page }))}
+            loading={loading}
+          />
         )}
         {/* Loading indicator */}
         {loading && (

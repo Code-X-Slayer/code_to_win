@@ -54,7 +54,7 @@ const StudentTable = ({
                   onClick={() => onProfileClick(s)}
                   className="text-gray-700 px-2 py-1 justify-center rounded hover:text-blue-700 flex items-center gap-1 cursor-pointer"
                 >
-                  <TbUserShare />
+                  <TbUserShare /><span className="hidden md:block">Profile</span>
                 </div>
               </td>
             </tr>
