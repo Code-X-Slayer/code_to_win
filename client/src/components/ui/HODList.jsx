@@ -62,7 +62,7 @@ const HODList = () => {
   const startEdit = (hod) => {
     setEditingId(hod.hod_id);
     setEditForm({
-      id: hod_id,
+      id: hod.hod_id,
       name: hod.name,
       email: hod.email,
       dept_code: hod.dept_code,

@@ -7,8 +7,8 @@ const RequiredLabel = ({ label, htmlFor }) => (
   </label>
 );
 
-const SAMPLE_CSV_DATA = `Student Id,Student Name,Student Email,Gender,CGPA,HackerRank,LeetCode,CodeChef,GeeksforGeeks
-22A91A6182,Pavan G,example@aditya.in,Male,8.5,gollapalli_shan1,gspavan07,gpavan07,gollapallishn85u`;
+const SAMPLE_CSV_DATA = `Student Id,Student Name,Student Email,Gender,Degree,HackerRank,LeetCode,CodeChef,GeeksforGeeks
+22A91A6182,Pavan G,example@aditya.in,Male,B.Tech,gollapalli_shan1,gspavan07,gpavan07,gollapallishn85u`;
 
 const downloadSampleCSV = () => {
   const blob = new Blob([SAMPLE_CSV_DATA], { type: "text/csv" });

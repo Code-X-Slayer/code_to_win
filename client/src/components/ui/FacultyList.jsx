@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { FaSearch, FaFilter, FaEdit, FaTrash, FaTimes, FaSave } from "react-icons/fa";
+import {
+  FaSearch,
+  FaFilter,
+  FaEdit,
+  FaTrash,
+  FaTimes,
+  FaSave,
+} from "react-icons/fa";
 import { useMeta } from "../../context/MetaContext";
 
 const FacultyList = () => {
@@ -51,80 +58,80 @@ const FacultyList = () => {
     e.preventDefault();
     fetchFaculty();
   };
-  
+
   const startEdit = (member) => {
     setEditingId(member.faculty_id);
     setEditForm({
       id: member.faculty_id,
       name: member.name,
       email: member.email,
-      dept_code: member.dept_code
+      dept_code: member.dept_code,
     });
   };
-  
+
   const cancelEdit = () => {
     setEditingId(null);
     setEditForm({});
   };
-  
+
   const handleEditChange = (e) => {
     setEditForm({
       ...editForm,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
-  
+
   const saveEdit = async (id) => {
     try {
       const response = await fetch(`/api/admin/faculty/${id}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(editForm)
+        body: JSON.stringify(editForm),
       });
-      
+
       if (!response.ok) {
-        throw new Error('Failed to update faculty');
+        throw new Error("Failed to update faculty");
       }
-      
+
       // Update local state
-      setFaculty(faculty.map(f => 
-        f.faculty_id === id ? { ...f, ...editForm } : f
-      ));
-      
+      setFaculty(
+        faculty.map((f) => (f.faculty_id === id ? { ...f, ...editForm } : f))
+      );
+
       setEditingId(null);
       setEditForm({});
     } catch (err) {
-      console.error('Error updating faculty:', err);
-      alert('Failed to update faculty. Please try again.');
+      console.error("Error updating faculty:", err);
+      alert("Failed to update faculty. Please try again.");
     }
   };
-  
+
   const confirmDelete = (id) => {
     setDeleteConfirm(id);
   };
-  
+
   const cancelDelete = () => {
     setDeleteConfirm(null);
   };
-  
+
   const deleteFaculty = async (id) => {
     try {
       const response = await fetch(`/api/admin/faculty/${id}`, {
-        method: 'DELETE'
+        method: "DELETE",
       });
-      
+
       if (!response.ok) {
-        throw new Error('Failed to delete faculty');
+        throw new Error("Failed to delete faculty");
       }
-      
+
       // Update local state
-      setFaculty(faculty.filter(f => f.faculty_id !== id));
+      setFaculty(faculty.filter((f) => f.faculty_id !== id));
       setDeleteConfirm(null);
     } catch (err) {
-      console.error('Error deleting faculty:', err);
-      alert('Failed to delete faculty. Please try again.');
+      console.error("Error deleting faculty:", err);
+      alert("Failed to delete faculty. Please try again.");
     }
   };
 
@@ -150,7 +157,7 @@ const FacultyList = () => {
     <div className="bg-white rounded-lg shadow">
       <div className="p-4 ">
         <h2 className="text-lg font-semibold">Faculty List</h2>
-        <p className="text-sm text-gray-500">View and filter faculty members</p>
+        <p className="text-xs text-gray-500">View and filter faculty members</p>
       </div>
 
       {/* Filters */}
@@ -160,7 +167,7 @@ const FacultyList = () => {
           className="flex flex-wrap items-center gap-4"
         >
           <div className="flex-1 min-w-[200px]">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-xs font-medium text-gray-700 mb-1">
               Department
             </label>
             <select
@@ -193,19 +200,19 @@ const FacultyList = () => {
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left  font-medium text-gray-500 uppercase tracking-wider">
+              <th className="text-xs lg:texst-base px-1 md:px-6 py-3 text-left  font-medium text-gray-500 uppercase tracking-wider">
                 ID
               </th>
-              <th className="px-6 py-3 text-left  font-medium text-gray-500 uppercase tracking-wider">
+              <th className="text-xs lg:texst-base px-1 md:px-6 py-3 text-left  font-medium text-gray-500 uppercase tracking-wider">
                 Name
               </th>
-              <th className="px-6 py-3 text-left  font-medium text-gray-500 uppercase tracking-wider">
+              <th className="text-xs lg:texst-base px-1 md:px-6 py-3 text-left  font-medium text-gray-500 uppercase tracking-wider">
                 Email
               </th>
-              <th className="px-6 py-3 text-left  font-medium text-gray-500 uppercase tracking-wider">
-                Department
+              <th className="text-xs lg:texst-base px-1 md:px-6 py-3 text-left  font-medium text-gray-500 uppercase tracking-wider">
+                dept
               </th>
-              <th className="px-6 py-3 text-left  font-medium text-gray-500 uppercase tracking-wider">
+              <th className="text-xs lg:texst-base px-1 md:px-6 py-3 text-left  font-medium text-gray-500 uppercase tracking-wider">
                 Actions
               </th>
             </tr>
@@ -213,14 +220,17 @@ const FacultyList = () => {
           <tbody className="bg-white divide-y divide-gray-200">
             {faculty.length === 0 ? (
               <tr>
-                <td colSpan="4" className="px-6 py-4 text-center text-gray-500">
+                <td
+                  colSpan="4"
+                  className="text-xs lg:texst-base px-1 md:px-6 py-4 text-center text-gray-500"
+                >
                   No faculty members found
                 </td>
               </tr>
             ) : (
               faculty.map((member) => (
                 <tr key={member.faculty_id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="text-xs lg:texst-base px-1 md:px-6 py-4 whitespace-nowrap">
                     {editingId === member.faculty_id ? (
                       <input
                         type="text"
@@ -230,10 +240,12 @@ const FacultyList = () => {
                         className="border border-gray-300 rounded px-2 py-1 w-full"
                       />
                     ) : (
-                      <div className="font-medium text-gray-900">{member.faculty_id}</div>
+                      <div className="font-medium text-gray-900">
+                        {member.faculty_id}
+                      </div>
                     )}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="text-xs lg:texst-base px-1 md:px-6 py-4 whitespace-nowrap">
                     {editingId === member.faculty_id ? (
                       <input
                         type="text"
@@ -243,10 +255,12 @@ const FacultyList = () => {
                         className="border border-gray-300 rounded px-2 py-1 w-full"
                       />
                     ) : (
-                      <div className="font-medium text-gray-900">{member.name}</div>
+                      <div className="font-medium text-gray-900">
+                        {member.name}
+                      </div>
                     )}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="text-xs lg:texst-base px-1 md:px-6 py-4 whitespace-nowrap">
                     {editingId === member.faculty_id ? (
                       <input
                         type="email"
@@ -259,7 +273,7 @@ const FacultyList = () => {
                       <div className="text-gray-500">{member.email}</div>
                     )}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="text-xs lg:texst-base px-1 md:px-6 py-4 whitespace-nowrap">
                     {editingId === member.faculty_id ? (
                       <select
                         name="dept_code"
@@ -267,7 +281,7 @@ const FacultyList = () => {
                         onChange={handleEditChange}
                         className="border border-gray-300 rounded px-2 py-1 w-full"
                       >
-                        {depts.map(dept => (
+                        {depts.map((dept) => (
                           <option key={dept.dept_code} value={dept.dept_code}>
                             {dept.dept_name}
                           </option>
@@ -275,24 +289,25 @@ const FacultyList = () => {
                       </select>
                     ) : (
                       <div className="text-gray-500">
-                        {depts.find(d => d.dept_code === member.dept_code)?.dept_name || member.dept_code}
+                        {depts.find((d) => d.dept_code === member.dept_code)
+                          ?.dept_name || member.dept_code}
                       </div>
                     )}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <td className="text-xs lg:texst-base px-1 md:px-6 py-4 whitespace-nowrap text-right font-medium">
                     {editingId === member.faculty_id ? (
                       <div className="flex space-x-2 justify-end">
                         <button
                           onClick={() => saveEdit(member.faculty_id)}
                           className="text-green-600 hover:text-green-900"
                         >
-                          <FaSave className="w-5 h-5" />
+                          <FaSave className="w-5" />
                         </button>
                         <button
                           onClick={cancelEdit}
                           className="text-gray-600 hover:text-gray-900"
                         >
-                          <FaTimes className="w-5 h-5" />
+                          <FaTimes className="w-5" />
                         </button>
                       </div>
                     ) : deleteConfirm === member.faculty_id ? (
@@ -311,7 +326,7 @@ const FacultyList = () => {
                         </button>
                       </div>
                     ) : (
-                          <div className="flex space-x-5">
+                      <div className="flex space-x-5">
                         <button
                           onClick={() => startEdit(member)}
                           className="text-blue-600 hover:text-blue-900"

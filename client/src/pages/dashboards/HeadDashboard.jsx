@@ -14,6 +14,16 @@ import {
 import UserProfile from "../../components/ui/UserProfile";
 import { useMeta } from "../../context/MetaContext";
 import Footer from "../../components/Footer";
+import DashboardSidebar from "../../components/DashboardSidebar";
+import { exportStudentsToExcel } from "../../utils/excelExport";
+import {
+  FiMenu,
+  FiBarChart2,
+  FiUsers,
+  FiUserPlus,
+  FiSettings,
+  FiDownload,
+} from "react-icons/fi";
 
 // Lazy-loaded components
 const RankingTable = lazy(() => import("../../components/Ranking"));
@@ -40,31 +50,6 @@ function StatsCards({ currentUser }) {
   );
 }
 
-// Tabs
-function DashboardTabs({ selectedTab, setSelectedTab }) {
-  const tabs = [
-    { key: "StudentRanking", label: "Student Ranking" },
-    { key: "StudentManagment", label: "Student Management" },
-    { key: "FacultyManagment", label: "Faculty Management" },
-    { key: "More", label: "More" },
-  ];
-  return (
-    <div className="grid grid-cols-2 md:grid-cols-4 justify-around rounded bg-gray-100 border-gray-200 border gap-2 md:gap-4 p-1 mb-4 text-base">
-      {tabs.map((tab) => (
-        <button
-          key={tab.key}
-          onClick={() => setSelectedTab(tab.key)}
-          className={`flex-1 min-w-[120px] py-1 rounded ${
-            selectedTab === tab.key ? "bg-white text-black" : ""
-          }`}
-        >
-          {tab.label}
-        </button>
-      ))}
-    </div>
-  );
-}
-
 // Student Management Tab
 function StudentManagementTab({
   years,
@@ -77,44 +62,56 @@ function StudentManagementTab({
   setSearch,
   filteredStudents,
   setSelectedStudent,
+  currentUser,
 }) {
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden min-w-full p-2 md:p-5">
-      <h2 className="text-xl font-semibold mb-4">Student Management</h2>
-      <p className="text-gray-500 mb-4">
-        Manage student records, update details, and more.
-      </p>
+      <div className="flex justify-between items-center mb-4">
+        <div>
+          <h2 className="text-xl font-semibold">Student Management</h2>
+          <p className="text-gray-500">
+            Manage student records, update details, and more.
+          </p>
+        </div>
+        <button
+          onClick={() => exportStudentsToExcel(filteredStudents, `hod_students_${currentUser?.dept_code}`)}
+          className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+        >
+          <FiDownload />
+          Export Excel
+        </button>
+      </div>
       <div className="flex gap-4 mb-4 items-end justify-between px-5">
         <div className="flex gap-5">
-        <div>
-          <label className="block text-sm font-medium mb-1">Year</label>
-          <select
-            className="border rounded px-2 py-1"
-            value={filterYear}
-            onChange={(e) => setFilterYear(e.target.value)}
-          >
-            <option value="">All</option>
-            {years.map((year) => (
-              <option key={year} value={year}>
-                {year}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Section</label>
-          <select
-            className="border rounded px-2 py-1"
-            value={filterSection}
-            onChange={(e) => setFilterSection(e.target.value)}
-          >
-            <option value="">All</option>
-            {sections.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
+          <div>
+            <label className="block text-sm font-medium mb-1">Year</label>
+            <select
+              className="border rounded px-2 py-1"
+              value={filterYear}
+              onChange={(e) => setFilterYear(e.target.value)}
+            >
+              <option value="">All</option>
+              {years.map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Section</label>
+            <select
+              className="border rounded px-2 py-1"
+              value={filterSection}
+              onChange={(e) => setFilterSection(e.target.value)}
+            >
+              <option value="">All</option>
+              {sections.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
         <div className="relative mt-5">
@@ -136,13 +133,13 @@ function StudentManagementTab({
         }
       >
         <div className="overflow-x-scroll md:overflow-hidden">
-        <StudentTable
-          students={filteredStudents}
-          showBranch={true}
-          showYear={true}
-          showSection={true}
-          rankLabel="Rank"
-          onProfileClick={setSelectedStudent}
+          <StudentTable
+            students={filteredStudents}
+            showBranch={true}
+            showYear={true}
+            showSection={true}
+            rankLabel="Rank"
+            onProfileClick={setSelectedStudent}
           />
         </div>
       </Suspense>
@@ -404,7 +401,7 @@ function AddStudentTab() {
 }
 
 function HeadDashboard() {
-  const { currentUser } = useAuth();
+  const { currentUser, logout } = useAuth();
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [students, setStudents] = useState([]);
   const [facultyList, setFacultyList] = useState([]);
@@ -413,6 +410,14 @@ function HeadDashboard() {
   const [filterSection, setFilterSection] = useState("");
   const [search, setSearch] = useState("");
   const [selectedTab, setSelectedTab] = useState("StudentRanking");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const menuItems = [
+    { key: "StudentRanking", label: "Student Ranking", icon: <FiBarChart2 /> },
+    { key: "StudentManagment", label: "Student Management", icon: <FiUsers /> },
+    { key: "FacultyManagment", label: "Faculty Management", icon: <FiUsers /> },
+    { key: "More", label: "More", icon: <FiUserPlus /> },
+  ];
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -470,48 +475,56 @@ function HeadDashboard() {
         </Suspense>
       )}
 
-      <Navbar />
-      <div className="bg-gray-50 overflow-hidden">
-        <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-8 space-y-4 p-2 md:p-6">
-          <h1 className="text-2xl font-semibold">HOD Dashboard</h1>
-          <UserProfile user={currentUser} />
-          <StatsCards currentUser={currentUser} />
-          <DashboardTabs
-            selectedTab={selectedTab}
-            setSelectedTab={setSelectedTab}
-          />
+      <Navbar toggleSidebar={() => setSidebarOpen(true)} />
+      <div className="flex bg-gray-50 min-h-screen">
+        <DashboardSidebar
+          isOpen={sidebarOpen}
+          toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+          selectedTab={selectedTab}
+          setSelectedTab={setSelectedTab}
+          menuItems={menuItems}
+          title="HOD Dashboard"
+          onLogout={logout}
+        />
 
-          {/* Content Sections with Suspense */}
-          {selectedTab === "StudentRanking" && (
-            <Suspense fallback={<LoadingSpinner />}>
-              <RankingTable filter={true} />
-            </Suspense>
-          )}
+        <div className="flex-1 lg:ml-64">
+          <div className="p-4 md:p-6 space-y-4">
+            <UserProfile user={currentUser} />
+            <StatsCards currentUser={currentUser} />
 
-          {selectedTab === "StudentManagment" && (
-            <StudentManagementTab
-              years={years}
-              sections={sections}
-              filterYear={filterYear}
-              setFilterYear={setFilterYear}
-              filterSection={filterSection}
-              setFilterSection={setFilterSection}
-              search={search}
-              setSearch={setSearch}
-              filteredStudents={filteredStudents}
-              setSelectedStudent={setSelectedStudent}
-            />
-          )}
+            {/* Content Sections with Suspense */}
+            {selectedTab === "StudentRanking" && (
+              <Suspense fallback={<LoadingSpinner />}>
+                <RankingTable filter={true} />
+              </Suspense>
+            )}
 
-          {selectedTab === "FacultyManagment" && (
-            <FacultyManagementTab
-              years={years}
-              sections={sections}
-              facultyList={facultyList}
-            />
-          )}
+            {selectedTab === "StudentManagment" && (
+              <StudentManagementTab
+                years={years}
+                sections={sections}
+                filterYear={filterYear}
+                setFilterYear={setFilterYear}
+                filterSection={filterSection}
+                setFilterSection={setFilterSection}
+                search={search}
+                setSearch={setSearch}
+                filteredStudents={filteredStudents}
+                setSelectedStudent={setSelectedStudent}
+                currentUser={currentUser}
+              />
+            )}
 
-          {selectedTab === "More" && <AddStudentTab />}
+            {selectedTab === "FacultyManagment" && (
+              <FacultyManagementTab
+                years={years}
+                sections={sections}
+                facultyList={facultyList}
+              />
+            )}
+
+            {selectedTab === "More" && <AddStudentTab />}
+          </div>
         </div>
       </div>
       <Footer />

@@ -68,14 +68,14 @@ router.post("/add-branch", async (req, res) => {
 
 // Add a new student (first to users, then to student_profiles)
 router.post("/add-student", async (req, res) => {
-  const { stdId, name, dept, year, section, degree, cgpa } = req.body;
+  const { stdId, name, dept, year, section, degree } = req.body;
   logger.info(`Add student request: ${JSON.stringify(req.body)}`);
   const connection = await db.getConnection(); // Use a connection from the pool
 
   try {
     await connection.beginTransaction();
     logger.info(
-      `Adding student: ${stdId}, ${name}, ${dept}, ${year}, ${section}, ${degree}, ${cgpa}`
+      `Adding student: ${stdId}, ${name}, ${dept}, ${year}, ${section}, ${degree}`
     );
 
     const hashed = await bcrypt.hash("student@aditya", 10);
@@ -89,9 +89,9 @@ router.post("/add-student", async (req, res) => {
     // 2. Insert into student_profiles table
     await connection.query(
       `INSERT INTO student_profiles 
-        (student_id, name, dept_code, year, section, degree, cgpa)
-        VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [stdId, name, dept, year, section, degree, cgpa]
+        (student_id, name, dept_code, year, section, degree)
+        VALUES (?, ?, ?, ?, ?, ?)`,
+      [stdId, name, dept, year, section, degree]
     );
     await connection.query(
       `INSERT INTO student_performance 
@@ -347,7 +347,7 @@ router.post("/bulk-import-student", upload.single("file"), async (req, res) => {
           "INSERT INTO users (user_id, email, password, role) VALUES (?, ?, ?, ?)",
           [stdId, email, hashed, "student"]
         );
-        if (stdId === "" || name == "" || row.Degree == "" || row.CGPA == "") {
+        if (stdId === "" || name == "" || row.Degree == "") {
           logger.warn(`Missing fields in CSV row: ${JSON.stringify(row)}`);
           errors.push({
             error: `Check the fields in CSV and upload.`,
@@ -356,9 +356,9 @@ router.post("/bulk-import-student", upload.single("file"), async (req, res) => {
         // Insert into student_profiles table
         await connection.query(
           `INSERT INTO student_profiles 
-           (student_id, name, dept_code, year, section, degree, cgpa)
-           VALUES (?, ?, ?, ?, ?, ?, ?)`,
-          [stdId, name, dept, year, section, row.Degree, row.CGPA]
+           (student_id, name, dept_code, year, section, degree)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+          [stdId, name, dept, year, section, row.Degree]
         );
         await connection.query(
           `INSERT INTO student_performance (student_id) VALUES (?);`,
@@ -571,7 +571,7 @@ router.post("/bulk-import-with-cp", upload.single("file"), async (req, res) => {
           "INSERT INTO users (user_id, email, password, role) VALUES (?, ?, ?, ?)",
           [stdId, email, hashed, "student"]
         );
-        if (!stdId || !name || !row.Degree || !row.CGPA) {
+        if (!stdId || !name || !row.Degree) {
           logger.warn(`Missing fields in CSV row: ${JSON.stringify(row)}`);
           errors.push({
             error: `Check the fields in CSV and upload.`,
@@ -581,9 +581,9 @@ router.post("/bulk-import-with-cp", upload.single("file"), async (req, res) => {
         // Insert into student_profiles table
         await connection.query(
           `INSERT INTO student_profiles 
-           (student_id, name, dept_code, year, section, degree, cgpa, gender)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-          [stdId, name, dept, year, section, row.Degree, row.CGPA, row.Gender]
+           (student_id, name, dept_code, year, section, degree, gender)
+           VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          [stdId, name, dept, year, section, row.Degree, row.Gender]
         );
         await connection.query(
           `INSERT INTO student_performance (student_id) VALUES (?);`,

@@ -5,8 +5,8 @@ import LoadingSpinner from "./common/LoadingSpinner";
 import { useAuth } from "./context/AuthContext";
 import CheckYourScore from "./pages/CheckYourScore";
 import Register from "./pages/Register";
-import AOS from 'aos';
-import 'aos/dist/aos.css';
+import AOS from "aos";
+import "aos/dist/aos.css";
 
 // import StdDashboard from "./pages/dashboards/StdDashboard";
 
@@ -44,7 +44,7 @@ const App = () => {
   useEffect(() => {
     AOS.init({
       duration: 800, // animation duration
-      once: true,    // whether animation should happen only once
+      once: true, // whether animation should happen only once
     });
   }, []);
   return (

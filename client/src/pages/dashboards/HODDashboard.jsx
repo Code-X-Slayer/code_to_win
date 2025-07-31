@@ -12,15 +12,7 @@ import { useAuth } from "../../context/AuthContext";
 import Navbar from "../../components/Navbar";
 import axios from "axios";
 import LoadingSpinner from "../../common/LoadingSpinner";
-import {
-  AddFacultyModal,
-  AddIndividualStudentModel,
-  BulkImportModal,
-  DeleteIndividualStudentModal,
-  ResetPasswordModal,
-} from "../../components/Modals";
-import BulkImportStudent from "../../components/ui/BulkImportStudent";
-import UserProfile from "../../components/ui/UserProfile";
+
 import { IoPeopleOutline } from "react-icons/io5";
 import DashboardSidebar from "../../components/DashboardSidebar";
 import {

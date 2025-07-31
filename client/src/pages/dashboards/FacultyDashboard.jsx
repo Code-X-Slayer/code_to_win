@@ -18,12 +18,14 @@ import {
 import UserProfile from "../../components/ui/UserProfile";
 import Footer from "../../components/Footer";
 import DashboardSidebar from "../../components/DashboardSidebar";
+import { exportStudentsToExcel } from "../../utils/excelExport";
 import {
   FiMenu,
   FiBarChart2,
   FiUsers,
   FiUserCheck,
   FiUserPlus,
+  FiDownload,
 } from "react-icons/fi";
 
 // Lazy-loaded components
@@ -126,12 +128,23 @@ function FacultyDashboard() {
 
                 {selectedTab === "StudentManagment" && (
                   <div className="bg-white p-1 md:p-6 rounded-lg shadow">
-                    <h2 className="text-xl font-semibold mb-4">
-                      Student Management
-                    </h2>
-                    <p className="text-gray-500 mb-4">
-                      Manage student records, update details, and more.
-                    </p>
+                    <div className="flex justify-between items-center mb-4">
+                      <div>
+                        <h2 className="text-xl font-semibold">
+                          Student Management
+                        </h2>
+                        <p className="text-gray-500">
+                          Manage student records, update details, and more.
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => exportStudentsToExcel(memoizedStudents, `faculty_students_${currentUser?.dept_code}_${currentUser?.year}_${currentUser?.section}`)}
+                        className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+                      >
+                        <FiDownload />
+                        Export Excel
+                      </button>
+                    </div>
                     <Suspense
                       fallback={
                         <>

@@ -23,6 +23,7 @@ const ContactRequests = lazy(() =>
 );
 const FacultyList = lazy(() => import("../../components/ui/FacultyList"));
 const HODList = lazy(() => import("../../components/ui/HODList"));
+const StudentTable = lazy(() => import("../../components/ui/StudentTable"));
 const AddFacultyModal = lazy(() =>
   import("../../components/Modals").then((m) => ({
     default: m.AddFacultyModal,
@@ -83,7 +84,8 @@ function AdminDashboard() {
 
   const menuItems = [
     { key: "StudentRanking", label: "Student Ranking", icon: <FiBarChart2 /> },
-    { key: "FacultyList", label: "Faculty List", icon: <FiUsers /> },
+    { key: "ManageStudents", label: "Manage Students", icon: <FiUsers /> },
+    { key: "FacultyList", label: "Faculty List", icon: <FiUserCheck /> },
     { key: "HODList", label: "HOD List", icon: <FiUserCheck /> },
     { key: "GradingSystem", label: "Grading System", icon: <FiSettings /> },
     { key: "UserManagment", label: "User Management", icon: <FiUserPlus /> },
@@ -228,6 +230,25 @@ function AdminDashboard() {
               <Suspense fallback={<LoadingSpinner />}>
                 <RankingTable filter={true} />
               </Suspense>
+            )}
+
+            {/* Manage Students */}
+            {selectedTab === "ManageStudents" && (
+              <div className="md:bg-white md:p-6 rounded-lg md:shadow">
+                <h2 className="text-xl font-semibold mb-4">Manage Students</h2>
+                <p className="text-gray-500 mb-4">
+                  View and modify student records across all departments.
+                </p>
+                <Suspense fallback={<LoadingSpinner />}>
+                  <StudentTable
+                    showBranch={true}
+                    showYear={true}
+                    showSection={true}
+                    onProfileClick={setSelectedStudent}
+                    adminView={true}
+                  />
+                </Suspense>
+              </div>
             )}
             {/* Grading System */}
             {selectedTab === "GradingSystem" && (

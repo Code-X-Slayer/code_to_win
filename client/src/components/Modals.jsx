@@ -234,8 +234,7 @@ export function AddIndividualStudentModel({ onSuccess }) {
       !form.dept ||
       !form.year ||
       !form.section ||
-      !form.degree ||
-      !form.cgpa
+      !form.degree
     ) {
       setStatus({
         loading: false,
@@ -265,7 +264,6 @@ export function AddIndividualStudentModel({ onSuccess }) {
         year: "",
         section: "",
         degree: "",
-        cgpa: "",
       });
       if (onSuccess) onSuccess();
     } catch (error) {
@@ -280,7 +278,6 @@ export function AddIndividualStudentModel({ onSuccess }) {
       fields={[
         { name: "name", label: "Student Name", type: "text", required: true },
         { name: "stdId", label: "Roll Number", type: "text", required: true },
-        { name: "cgpa", label: "CGPA", type: "text", required: true },
         {
           name: "degree",
           label: "Degree",
@@ -328,7 +325,6 @@ export function AddIndividualStudentModel({ onSuccess }) {
         year: "",
         section: "",
         degree: "",
-        cgpa: "",
       }}
     />
   );
@@ -875,13 +871,16 @@ export function BulkImportModal() {
 }
 
 // Edit Modal (student info)
-export function EditModal({ onClose, user, onSuccess }) {
+export function EditModal({ onClose, user, onSuccess, adminView = false }) {
+  const { depts, years, sections } = useMeta();
   const savedData = {
     name: user.name || "",
     roll: user.student_id || "",
     email: user.email || "",
     year: user.year || "",
     section: user.section || "",
+    dept_code: user.dept_code || "",
+    degree: user.degree || "",
   };
   const [form, setForm] = useState(savedData);
   const [status, setStatus] = useState({
@@ -910,6 +909,13 @@ export function EditModal({ onClose, user, onSuccess }) {
     const payload = { userId: user.student_id };
     if (form.name !== savedData.name) payload.name = form.name;
     if (form.email !== savedData.email) payload.email = form.email;
+    
+    if (adminView) {
+      if (form.year !== savedData.year) payload.year = form.year;
+      if (form.section !== savedData.section) payload.section = form.section;
+      if (form.dept_code !== savedData.dept_code) payload.dept_code = form.dept_code;
+      if (form.degree !== savedData.degree) payload.degree = form.degree;
+    }
 
     // If nothing changed, just close
     if (Object.keys(payload).length === 1) {
@@ -919,8 +925,9 @@ export function EditModal({ onClose, user, onSuccess }) {
     }
 
     try {
-      const response = await fetch(`/api/student/update-profile`, {
-        method: "PUT",
+      const endpoint = adminView ? "/api/admin/update-student" : "/api/student/update-profile";
+      const response = await fetch(endpoint, {
+        method: adminView ? "POST" : "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
@@ -971,26 +978,84 @@ export function EditModal({ onClose, user, onSuccess }) {
             placeholder="Registration Number"
           />
           <input
-            name="year"
-            value={form.year}
-            disabled
-            className="flex-1 border border-gray-300 rounded px-2 py-1 w-full cursor-not-allowed"
-            placeholder="Year"
-          />
-          <input
-            name="section"
-            value={form.section}
-            disabled
-            className="flex-1 border border-gray-300 rounded px-2 py-1 w-full cursor-not-allowed"
-            placeholder="Section"
-          />
-          <input
             name="email"
             value={form.email}
             onChange={handleChange}
-            className="flex-1 border border-gray-300 rounded px-2 py-1 w-full focus:ring-2 focus:ring-blue-600 focus:outline-0 "
+            className="flex-1 border border-gray-300 rounded px-2 py-1 w-full focus:ring-2 focus:ring-blue-600 focus:outline-0"
             placeholder="Email"
           />
+          
+          {adminView ? (
+            <>
+              <select
+                name="dept_code"
+                value={form.dept_code}
+                onChange={handleChange}
+                className="flex-1 border border-gray-300 rounded px-2 py-1 w-full focus:ring-2 focus:ring-blue-600 focus:outline-0"
+              >
+                <option value="">Select Department</option>
+                {depts.map((dept) => (
+                  <option key={dept.dept_code} value={dept.dept_code}>
+                    {dept.dept_name}
+                  </option>
+                ))}
+              </select>
+              <select
+                name="year"
+                value={form.year}
+                onChange={handleChange}
+                className="flex-1 border border-gray-300 rounded px-2 py-1 w-full focus:ring-2 focus:ring-blue-600 focus:outline-0"
+              >
+                <option value="">Select Year</option>
+                {years.map((year) => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                ))}
+              </select>
+              <select
+                name="section"
+                value={form.section}
+                onChange={handleChange}
+                className="flex-1 border border-gray-300 rounded px-2 py-1 w-full focus:ring-2 focus:ring-blue-600 focus:outline-0"
+              >
+                <option value="">Select Section</option>
+                {sections.map((section) => (
+                  <option key={section} value={section}>
+                    {section}
+                  </option>
+                ))}
+              </select>
+              <select
+                name="degree"
+                value={form.degree}
+                onChange={handleChange}
+                className="flex-1 border border-gray-300 rounded px-2 py-1 w-full focus:ring-2 focus:ring-blue-600 focus:outline-0"
+              >
+                <option value="">Select Degree</option>
+                <option value="B.Tech">B.Tech</option>
+                <option value="MCA">MCA</option>
+              </select>
+
+            </>
+          ) : (
+            <>
+              <input
+                name="year"
+                value={form.year}
+                disabled
+                className="flex-1 border border-gray-300 rounded px-2 py-1 w-full cursor-not-allowed"
+                placeholder="Year"
+              />
+              <input
+                name="section"
+                value={form.section}
+                disabled
+                className="flex-1 border border-gray-300 rounded px-2 py-1 w-full cursor-not-allowed"
+                placeholder="Section"
+              />
+            </>
+          )}
           <div className="flex justify-end gap-2 mt-4">
             <button
               type="button"
