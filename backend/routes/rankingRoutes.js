@@ -17,7 +17,7 @@ router.get("/overall", async (req, res) => {
   logger.info("Fetching overall ranking");
   try {
     const scoreExpr = await getScoreExpression();
-    const limit = Math.max(1, Math.min(parseInt(req.query.limit) || 10000)); // max 1000
+    const limit = Math.max(1, Math.min(parseInt(req.query.limit) || 500)); // max 500
     const [rows] = await db.query(
       `SELECT 
   sp.student_id, 

@@ -61,6 +61,14 @@ const Navbar = ({ toggleSidebar }) => {
                   ({currentUser?.role})
                 </span>
               </div>
+              {currentUser?.role === "student" && (<div
+                onClick={logout}
+                className="flex items-center gap-2 on hover:text-blue-800 p-2 cursor-pointer"
+              >
+                <FiLogOut />
+                Logout
+              </div>)}
+              
             </div>
           )}
           {/* Mobile Hamburger */}
@@ -81,6 +89,7 @@ const Navbar = ({ toggleSidebar }) => {
                 >
                   <FiMenu />
                 </button>
+                
               </>
             )}
           </div>
