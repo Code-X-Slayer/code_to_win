@@ -105,31 +105,13 @@ function Home() {
           </thead>
           <tbody>
             {loading ? (
-              Array.from({ length: 5 }).map((_, i) => (
-                <tr key={i} className="animate-pulse">
-                  <td className="py-5 px-2 md:px-4">
-                    <div className="h-6 bg-gray-200 rounded w-8 mx-auto"></div>
-                  </td>
-                  <td className="py-3 md:px-4 px-2">
-                    <div className="flex items-center gap-2">
-                      <div className="hidden md:block w-8 h-8 bg-gray-200 rounded-full"></div>
-                      <div className="h-4 bg-gray-200 rounded w-24"></div>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4">
-                    <div className="h-4 bg-gray-200 rounded w-16 mx-auto"></div>
-                  </td>
-                  <td className="py-3 md:px-4 px-2 sr-only md:not-sr-only">
-                    <div className="h-4 bg-gray-200 rounded w-12 mx-auto"></div>
-                  </td>
-                  <td className="py-3 md:px-4 px-2">
-                    <div className="h-4 bg-gray-200 rounded w-8 mx-auto"></div>
-                  </td>
-                  <td className="py-3 md:px-4 px-2">
-                    <div className="h-4 bg-gray-200 rounded w-12 mx-auto"></div>
-                  </td>
-                </tr>
-              ))
+              <tr>
+                <td colSpan="6" className="py-10 text-center">
+                  <div className="flex justify-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-700"></div>
+                  </div>
+                </td>
+              </tr>
             ) : ranks.length === 0 ? (
               <tr>
                 <td colSpan="6" className="py-10 text-center text-gray-500">

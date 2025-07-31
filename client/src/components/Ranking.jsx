@@ -30,6 +30,7 @@ const TOP_X_OPTIONS = [
 const RankingTable = ({ filter }) => {
   const [ranks, setRanks] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [fetchingRanks, setFetchingRanks] = useState(false);
   const [filters, setFilters] = useState({
     dept: "",
     year: "",
@@ -44,6 +45,7 @@ const RankingTable = ({ filter }) => {
 
   const fetchRanks = async () => {
     try {
+      setFetchingRanks(true);
       let params = { ...filters };
       if (topX) params.limit = topX;
 
@@ -67,6 +69,8 @@ const RankingTable = ({ filter }) => {
     } catch (err) {
       console.error(err);
       setRanks([]);
+    } finally {
+      setFetchingRanks(false);
     }
   };
   useEffect(() => {
@@ -392,7 +396,39 @@ const RankingTable = ({ filter }) => {
             </tr>
           </thead>
           <tbody>
-            {paginatedRanks.length === 0 ? (
+            {fetchingRanks ? (
+              Array.from({ length: 10 }).map((_, i) => (
+                <tr key={i} className="animate-pulse">
+                  <td className="py-3 px-1 md:px-4">
+                    <div className="h-6 bg-gray-200 rounded w-8 mx-auto"></div>
+                  </td>
+                  <td className="py-3 md:px-4 px-1">
+                    <div className="flex items-center gap-2">
+                      <div className="hidden md:block w-8 h-8 bg-gray-200 rounded-full"></div>
+                      <div className="h-4 bg-gray-200 rounded w-24"></div>
+                    </div>
+                  </td>
+                  <td className="py-3 px-4">
+                    <div className="h-4 bg-gray-200 rounded w-16 mx-auto"></div>
+                  </td>
+                  <td className="py-3 md:px-4 px-1 sr-only md:not-sr-only">
+                    <div className="h-4 bg-gray-200 rounded w-12 mx-auto"></div>
+                  </td>
+                  <td className="py-3 md:px-4 px-1 sr-only md:not-sr-only">
+                    <div className="h-4 bg-gray-200 rounded w-8 mx-auto"></div>
+                  </td>
+                  <td className="py-3 md:px-4 px-1 sr-only md:not-sr-only">
+                    <div className="h-4 bg-gray-200 rounded w-8 mx-auto"></div>
+                  </td>
+                  <td className="py-3 md:px-4 px-1">
+                    <div className="h-4 bg-gray-200 rounded w-12 mx-auto"></div>
+                  </td>
+                  <td className="py-3 md:px-4 px-1">
+                    <div className="h-6 w-6 bg-gray-200 rounded mx-auto"></div>
+                  </td>
+                </tr>
+              ))
+            ) : paginatedRanks.length === 0 ? (
               <tr>
                 <td colSpan={8} className="text-center py-10 text-gray-500">
                   No students in ranking

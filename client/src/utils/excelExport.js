@@ -2,10 +2,10 @@ import * as XLSX from "xlsx";
 
 export const exportStudentsToExcel = (students, filename = "students") => {
   // Prepare data for Excel export
-  const excelData = students.map((student) => ({
+  const excelData = students.map((student, i) => ({
+    "S.No": i + 1,
     "Student ID": student.student_id,
     Name: student.name,
-    Email: student.email,
     Department: student.dept_name,
     Year: student.year,
     Section: student.section,
