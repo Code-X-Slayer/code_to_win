@@ -18,7 +18,7 @@ router.get("/overall", async (req, res) => {
   logger.info("Fetching overall ranking");
   try {
     const scoreExpr = await getScoreExpression();
-    const limit = Math.max(1, Math.min(parseInt(req.query.limit) || 500)); // max 500
+    const limit = Math.max(1, Math.min(parseInt(req.query.limit) || 20000)); // max 500
     const [rows] = await db.query(
       `SELECT 
   sp.student_id, 
@@ -170,7 +170,7 @@ router.get("/filter", async (req, res) => {
       where += " AND (sp.name LIKE ? OR sp.roll_number LIKE ?)";
       params.push(`%${req.query.search}%`, `%${req.query.search}%`);
     }
-    const limit = Math.max(1, Math.min(parseInt(req.query.limit) || 100, 1000)); // max 1000
+    const limit = Math.max(1, Math.min(parseInt(req.query.limit) || 2000)); // max 1000
     const [rows] = await db.query(
       `SELECT 
   sp.*, 
@@ -288,14 +288,14 @@ router.post("/update-all", async (req, res) => {
   try {
     const result = await updateAllRankings();
     if (result.success) {
-      res.json({ 
-        message: "Rankings updated successfully", 
-        studentsUpdated: result.studentsUpdated 
+      res.json({
+        message: "Rankings updated successfully",
+        studentsUpdated: result.studentsUpdated,
       });
     } else {
-      res.status(500).json({ 
-        message: "Failed to update rankings", 
-        error: result.error 
+      res.status(500).json({
+        message: "Failed to update rankings",
+        error: result.error,
       });
     }
   } catch (err) {
