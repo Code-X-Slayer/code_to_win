@@ -8,6 +8,7 @@ import { FaDownload } from "react-icons/fa6";
 import { IoIosSync } from "react-icons/io";
 import * as XLSX from "xlsx";
 import dayjs from "dayjs";
+import toast from "react-hot-toast";
 
 const RankBadge = ({ rank }) => {
   if (rank === 1)
@@ -93,7 +94,7 @@ const RankingTable = ({ filter }) => {
       }
 
       // Show success message
-      alert(
+      toast.success(
         "Ranking update started in the background. This may take a few minutes."
       );
 
@@ -103,7 +104,7 @@ const RankingTable = ({ filter }) => {
       }, 2000);
     } catch (error) {
       console.error("Error updating rankings:", error);
-      alert("Failed to update rankings. Please try again later.");
+      toast.error("Failed to update rankings. Please try again later.");
     } finally {
       setLoading(false);
     }

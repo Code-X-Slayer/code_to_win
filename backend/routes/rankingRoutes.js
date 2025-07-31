@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const db = require("../config/db"); // MySQL connection
 const { logger } = require("../utils"); // <-- Add logger
+const updateAllRankings = require("../updateRankings");
 
 // Calculate score expression for ranking
 async function getScoreExpression() {
@@ -277,6 +278,28 @@ LIMIT ?`,
     res.json(rows);
   } catch (err) {
     logger.error(`Error fetching filtered ranking: ${err.message}`);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// POST /ranking/update-all
+router.post("/update-all", async (req, res) => {
+  logger.info("Manual ranking update triggered");
+  try {
+    const result = await updateAllRankings();
+    if (result.success) {
+      res.json({ 
+        message: "Rankings updated successfully", 
+        studentsUpdated: result.studentsUpdated 
+      });
+    } else {
+      res.status(500).json({ 
+        message: "Failed to update rankings", 
+        error: result.error 
+      });
+    }
+  } catch (err) {
+    logger.error(`Error in manual ranking update: ${err.message}`);
     res.status(500).json({ message: "Server error" });
   }
 });

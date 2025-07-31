@@ -57,11 +57,12 @@ async function updateAllRankings() {
     const batchSize = 100;
     for (let i = 0; i < updateData.length; i += batchSize) {
       const batch = updateData.slice(i, i + batchSize);
-      await connection.query(
-        "INSERT INTO student_profiles (score, overall_rank, student_id) VALUES ? " +
-        "ON DUPLICATE KEY UPDATE score=VALUES(score), overall_rank=VALUES(overall_rank)",
-        [batch.map(row => [row[0], row[1], row[2]])]
-      );
+      for (const [score, rank, studentId] of batch) {
+        await connection.query(
+          "UPDATE student_profiles SET score = ?, overall_rank = ? WHERE student_id = ?",
+          [score, rank, studentId]
+        );
+      }
       logger.info(`Updated ranks ${i+1} to ${Math.min(i+batchSize, updateData.length)}`);
     }
     
