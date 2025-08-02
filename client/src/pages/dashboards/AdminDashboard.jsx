@@ -13,7 +13,10 @@ import {
   FiUserPlus,
   FiMail,
   FiBarChart2,
+  FiDownload,
 } from "react-icons/fi";
+import { useMeta } from "../../context/MetaContext";
+import toast from "react-hot-toast";
 
 // Lazy-loaded components
 const RankingTable = lazy(() => import("../../components/Ranking"));
@@ -81,6 +84,9 @@ function AdminDashboard() {
   const [userMgmtTab, setUserMgmtTab] = useState("addBranch");
   const [changedMetrics, setChangedMetrics] = useState(new Set());
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [customFilters, setCustomFilters] = useState({ dept: '', year: '', section: '' });
+  const [deptWiseFilter, setDeptWiseFilter] = useState('');
+  const { depts, years, sections } = useMeta();
 
   const menuItems = [
     { key: "StudentRanking", label: "Student Ranking", icon: <FiBarChart2 /> },
@@ -90,6 +96,7 @@ function AdminDashboard() {
     { key: "GradingSystem", label: "Grading System", icon: <FiSettings /> },
     { key: "UserManagment", label: "User Management", icon: <FiUserPlus /> },
     { key: "ContactRequests", label: "Contact Requests", icon: <FiMail /> },
+    { key: "Downloads", label: "Downloads", icon: <FiDownload /> },
   ];
 
   // Helper to make metric names readable
@@ -173,9 +180,43 @@ function AdminDashboard() {
     return grouped;
   }, [grading]);
 
-  const handleComplete = (result) => {
-    console.log("Processing complete:", result);
-    // You can do something with the result here
+  const handleDownload = async (type) => {
+    try {
+      toast.loading('Preparing download...');
+      let url = `/api/download/${type}`;
+      
+      if (type === 'custom') {
+        const params = new URLSearchParams(customFilters).toString();
+        url += `?${params}`;
+      } else if (type === 'department-wise') {
+        if (!deptWiseFilter) {
+          toast.dismiss();
+          toast.error('Please select a department first.');
+          return;
+        }
+        url += `?dept=${deptWiseFilter}`;
+      }
+      
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Download failed');
+      
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = response.headers.get('Content-Disposition')?.split('filename=')[1]?.replace(/"/g, '') || `${type}_data.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(downloadUrl);
+      
+      toast.dismiss();
+      toast.success('Download completed!');
+    } catch (error) {
+      toast.dismiss();
+      toast.error('Download failed. Please try again.');
+      console.error('Download error:', error);
+    }
   };
 
   return (
@@ -332,6 +373,105 @@ function AdminDashboard() {
               <Suspense fallback={<LoadingSpinner />}>
                 <ContactRequests />
               </Suspense>
+            )}
+
+            {/* Downloads */}
+            {selectedTab === "Downloads" && (
+              <div className="bg-white p-6 rounded-lg shadow">
+                <h2 className="text-xl font-semibold mb-4">Download Data</h2>
+                <p className="text-gray-500 mb-6">
+                  Export various types of data from the system.
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <button onClick={() => handleDownload('all-students')} className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 text-left transition">
+                    <div className="flex items-center gap-3 mb-2">
+                      <FiDownload className="text-blue-600" />
+                      <h3 className="font-semibold">All Students Data</h3>
+                    </div>
+                    <p className="text-sm text-gray-600">
+                      Same format as generate students excel
+                    </p>
+                  </button>
+                  
+                  <button onClick={() => handleDownload('faculty')} className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 text-left transition">
+                    <div className="flex items-center gap-3 mb-2">
+                      <FiDownload className="text-green-600" />
+                      <h3 className="font-semibold">Faculty Data</h3>
+                    </div>
+                    <p className="text-sm text-gray-600">
+                      All faculty + department-wise sheets
+                    </p>
+                  </button>
+                  
+                  <button onClick={() => handleDownload('hod')} className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 text-left transition">
+                    <div className="flex items-center gap-3 mb-2">
+                      <FiDownload className="text-purple-600" />
+                      <h3 className="font-semibold">HOD Data</h3>
+                    </div>
+                    <p className="text-sm text-gray-600">
+                      Head of Department information
+                    </p>
+                  </button>
+                  
+                  <div className="p-4 border border-gray-200 rounded-lg">
+                    <div className="flex items-center gap-3 mb-3">
+                      <FiDownload className="text-red-600" />
+                      <h3 className="font-semibold">Department Wise</h3>
+                    </div>
+                    <div className="space-y-2 mb-3">
+                      <select 
+                        value={deptWiseFilter} 
+                        onChange={(e) => setDeptWiseFilter(e.target.value)}
+                        className="w-full p-2 border rounded text-sm"
+                      >
+                        <option value="">Select Department</option>
+                        {depts.map(d => <option key={d.dept_code} value={d.dept_code}>{d.dept_name}</option>)}
+                      </select>
+                    </div>
+                    <button onClick={() => handleDownload('department-wise')} className="w-full bg-red-600 text-white py-2 rounded hover:bg-red-700 transition">
+                      Download Department Data
+                    </button>
+                  </div>
+                  
+                  <div className="p-4 border border-gray-200 rounded-lg">
+                    <div className="flex items-center gap-3 mb-3">
+                      <FiDownload className="text-teal-600" />
+                      <h3 className="font-semibold">Custom Report</h3>
+                    </div>
+                    <div className="space-y-2 mb-3">
+                      <select 
+                        value={customFilters.dept} 
+                        onChange={(e) => setCustomFilters(prev => ({...prev, dept: e.target.value}))}
+                        className="w-full p-2 border rounded text-sm"
+                      >
+                        <option value="">All Departments</option>
+                        {depts.map(d => <option key={d.dept_code} value={d.dept_code}>{d.dept_name}</option>)}
+                      </select>
+                      <div className="flex gap-2">
+                        <select 
+                          value={customFilters.year} 
+                          onChange={(e) => setCustomFilters(prev => ({...prev, year: e.target.value}))}
+                          className="flex-1 p-2 border rounded text-sm"
+                        >
+                          <option value="">All Years</option>
+                          {years.map(y => <option key={y} value={y}>{y}</option>)}
+                        </select>
+                        <select 
+                          value={customFilters.section} 
+                          onChange={(e) => setCustomFilters(prev => ({...prev, section: e.target.value}))}
+                          className="flex-1 p-2 border rounded text-sm"
+                        >
+                          <option value="">All Sections</option>
+                          {sections.map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                      </div>
+                    </div>
+                    <button onClick={() => handleDownload('custom')} className="w-full bg-teal-600 text-white py-2 rounded hover:bg-teal-700 transition">
+                      Generate Custom Report
+                    </button>
+                  </div>
+                </div>
+              </div>
             )}
 
             {/* User Management */}
