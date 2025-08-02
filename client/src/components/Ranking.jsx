@@ -26,6 +26,7 @@ const TOP_X_OPTIONS = [
   { label: "Top 10", value: 10 },
   { label: "Top 50", value: 50 },
   { label: "Top 100", value: 100 },
+  { label: "Top 200", value: 200 },
 ];
 
 const RankingTable = ({ filter }) => {
@@ -37,7 +38,7 @@ const RankingTable = ({ filter }) => {
     year: "",
     section: "",
   });
-  const [topX, setTopX] = useState("");
+  const [topX, setTopX] = useState(200);
   const [search, setSearch] = useState("");
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
