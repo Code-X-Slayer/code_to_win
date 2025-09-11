@@ -41,7 +41,7 @@ cron.schedule("0 0 * * 6", async () => {
   logger.info("[CRON] Weekly student performance update finished.");
 });
 
-updateAllStudentsPerformance(); // Initial run on server start
+// updateAllStudentsPerformance(); // Initial run on server start
 
 // Schedule: Every day at 03:00 AM - Update rankings
 cron.schedule("0 3 * * *", async () => {
@@ -49,7 +49,9 @@ cron.schedule("0 3 * * *", async () => {
   const updateRankings = require("./updateRankings");
   try {
     const result = await updateRankings();
-    logger.info(`[CRON] Daily ranking update finished: ${result.studentsUpdated} students updated`);
+    logger.info(
+      `[CRON] Daily ranking update finished: ${result.studentsUpdated} students updated`
+    );
   } catch (error) {
     logger.error(`[CRON] Error in daily ranking update: ${error.message}`);
   }
