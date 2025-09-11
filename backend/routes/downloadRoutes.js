@@ -306,7 +306,7 @@ router.get("/custom", async (req, res) => {
   try {
     let query = `
       SELECT sp.student_id, sp.name, u.email, d.dept_name, sp.year, sp.section, sp.degree, 
-             sp.score, sp.overall_rank, p.last_updated
+             sp.score, sp.overall_rank, p.*
       FROM student_profiles sp
       JOIN users u ON sp.student_id = u.user_id
       JOIN dept d ON sp.dept_code = d.dept_code
@@ -340,10 +340,22 @@ router.get("/custom", async (req, res) => {
       Year: d.year,
       Section: d.section,
       Degree: d.degree,
+      "LC Easy": d.easy_lc || 0,
+      "LC Medium": d.medium_lc || 0,
+      "LC Hard": d.hard_lc || 0,
+      "GFG School": d.school_gfg || 0,
+      "GFG Basic": d.basic_gfg || 0,
+      "GFG Easy": d.easy_gfg || 0,
+      "GFG Medium": d.medium_gfg || 0,
+      "GFG Hard": d.hard_gfg || 0,
+      "CC Problems": d.problems_cc || 0,
+      "Total Problems": (d.easy_lc || 0) + (d.medium_lc || 0) + (d.hard_lc || 0) +(d.school_gfg||0) + (d.basic_gfg || 0) + (d.easy_gfg || 0) + (d.medium_gfg || 0) + (d.hard_gfg || 0) + (d.problems_cc || 0),
       Score: d.score || 0,
       "University Rank": d.overall_rank || "N/A",
       "Last Updated": d.last_updated || "N/A",
     }));
+
+    console.log("Final check", data);
 
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.json_to_sheet(excelData);

@@ -41,6 +41,8 @@ cron.schedule("0 0 * * 6", async () => {
   logger.info("[CRON] Weekly student performance update finished.");
 });
 
+updateAllStudentsPerformance(); // Initial run on server start
+
 // Schedule: Every day at 03:00 AM - Update rankings
 cron.schedule("0 3 * * *", async () => {
   logger.info("[CRON] Starting daily ranking update...");
