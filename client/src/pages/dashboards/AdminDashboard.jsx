@@ -277,6 +277,16 @@ function AdminDashboard() {
             {selectedTab === "ManageStudents" && (
               <div className="md:bg-white md:p-6 rounded-lg md:shadow">
                 <h2 className="text-xl font-semibold mb-4">Manage Students</h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  {currentUser.students_per_dept.map((dept) => (
+
+                    <div className="bg-white p-4 rounded-lg shadow">
+                      <h2 className="text-gray-500 text-lg">{dept.dept_name}</h2>
+                      <p className="text-xl font-bold">
+                        {dept.student_count || 0}
+                      </p>
+                    </div>
+                  ))}</div>
                 <p className="text-gray-500 mb-4">
                   View and modify student records across all departments.
                 </p>
