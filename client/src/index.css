@@ -5,3 +5,7 @@
     color: black !important;
   }
 }
+button
+{
+  cursor: pointer;
+}

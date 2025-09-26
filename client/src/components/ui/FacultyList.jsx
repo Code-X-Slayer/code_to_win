@@ -154,14 +154,14 @@ const FacultyList = () => {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow">
+    <div className="bg-white rounded-lg shadow  ">
       <div className="p-4 ">
         <h2 className="text-lg font-semibold">Faculty List</h2>
         <p className="text-xs text-gray-500">View and filter faculty members</p>
       </div>
 
       {/* Filters */}
-      <div className="p-4">
+      <div className="p-4 overflow-x-scroll">
         <form
           onSubmit={applyFilters}
           className="flex flex-wrap items-center gap-4"
@@ -196,23 +196,23 @@ const FacultyList = () => {
       </div>
 
       {/* Faculty List */}
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
+      <div className="overflow-x-scroll">
+        <table className="min-w-full divide-y divide-gray-200 overflow-x-scroll">
           <thead className="bg-gray-50">
             <tr>
-              <th className="text-xs lg:texst-base px-1 md:px-6 py-3 text-left  font-medium text-gray-500 uppercase tracking-wider">
+              <th className="text-xs lg:text-base px-1 md:px-6 py-3 text-left  font-medium text-gray-500 uppercase tracking-wider">
                 ID
               </th>
-              <th className="text-xs lg:texst-base px-1 md:px-6 py-3 text-left  font-medium text-gray-500 uppercase tracking-wider">
+              <th className="text-xs lg:text-base px-1 md:px-6 py-3 text-left  font-medium text-gray-500 uppercase tracking-wider">
                 Name
               </th>
-              <th className="text-xs lg:texst-base px-1 md:px-6 py-3 text-left  font-medium text-gray-500 uppercase tracking-wider">
+              <th className="text-xs lg:text-base px-1 md:px-6 py-3 text-left  font-medium text-gray-500 uppercase tracking-wider">
                 Email
               </th>
-              <th className="text-xs lg:texst-base px-1 md:px-6 py-3 text-left  font-medium text-gray-500 uppercase tracking-wider">
+              <th className="text-xs lg:text-base px-1 md:px-6 py-3 text-left  font-medium text-gray-500 uppercase tracking-wider">
                 dept
               </th>
-              <th className="text-xs lg:texst-base px-1 md:px-6 py-3 text-left  font-medium text-gray-500 uppercase tracking-wider">
+              <th className="text-xs lg:text-base px-1 md:px-6 py-3 text-left  font-medium text-gray-500 uppercase tracking-wider">
                 Actions
               </th>
             </tr>
@@ -222,7 +222,7 @@ const FacultyList = () => {
               <tr>
                 <td
                   colSpan="4"
-                  className="text-xs lg:texst-base px-1 md:px-6 py-4 text-center text-gray-500"
+                  className="text-xs lg:text-base px-1 md:px-6 py-4 text-center text-gray-500"
                 >
                   No faculty members found
                 </td>
@@ -230,7 +230,7 @@ const FacultyList = () => {
             ) : (
               faculty.map((member) => (
                 <tr key={member.faculty_id} className="hover:bg-gray-50">
-                  <td className="text-xs lg:texst-base px-1 md:px-6 py-4 whitespace-nowrap">
+                  <td className="text-xs lg:text-base px-1 md:px-6 py-4 whitespace-nowrap">
                     {editingId === member.faculty_id ? (
                       <input
                         type="text"
@@ -245,7 +245,7 @@ const FacultyList = () => {
                       </div>
                     )}
                   </td>
-                  <td className="text-xs lg:texst-base px-1 md:px-6 py-4 whitespace-nowrap">
+                  <td className="text-xs lg:text-base px-1 md:px-6 py-4 whitespace-nowrap">
                     {editingId === member.faculty_id ? (
                       <input
                         type="text"
@@ -260,7 +260,7 @@ const FacultyList = () => {
                       </div>
                     )}
                   </td>
-                  <td className="text-xs lg:texst-base px-1 md:px-6 py-4 whitespace-nowrap">
+                  <td className="text-xs lg:text-base px-1 md:px-6 py-4 whitespace-nowrap">
                     {editingId === member.faculty_id ? (
                       <input
                         type="email"
@@ -273,7 +273,7 @@ const FacultyList = () => {
                       <div className="text-gray-500">{member.email}</div>
                     )}
                   </td>
-                  <td className="text-xs lg:texst-base px-1 md:px-6 py-4 whitespace-nowrap">
+                  <td className="text-xs lg:text-base px-1 md:px-6 py-4 whitespace-nowrap">
                     {editingId === member.faculty_id ? (
                       <select
                         name="dept_code"
@@ -294,7 +294,7 @@ const FacultyList = () => {
                       </div>
                     )}
                   </td>
-                  <td className="text-xs lg:texst-base px-1 md:px-6 py-4 whitespace-nowrap text-right font-medium">
+                  <td className="text-xs lg:text-base px-1 md:px-6 py-4 whitespace-nowrap text-right font-medium">
                     {editingId === member.faculty_id ? (
                       <div className="flex space-x-2 justify-end">
                         <button

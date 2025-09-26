@@ -438,7 +438,7 @@ const RankingTable = ({ filter }) => {
               </tr>
             ) : (
               paginatedRanks.map((s) => (
-                <tr key={s.student_id} className="hover:bg-gray-50 text-center">
+                <tr key={s.student_id} className="hover:bg-gray-50 text-center" data-aos="fade-left">
                   <td className="py-3 px-1 md:px-4 ">
                     <RankBadge rank={s.rank} />
                   </td>
