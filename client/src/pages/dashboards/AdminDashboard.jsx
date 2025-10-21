@@ -348,9 +348,9 @@ function AdminDashboard() {
                 </p>
               </div>
               <div className="bg-white p-4 rounded-lg shadow">
-                <h2 className="text-gray-500 text-sm">Total Visitors</h2>
+                <h2 className="text-gray-500 text-sm">Today's Visitors</h2>
                 <p className="text-2xl font-bold">
-                  {currentUser.visitor_stats?.total_visits || 0}
+                  {currentUser.visitor_stats?.today_visits || 0}
                 </p>
               </div>
               <div className="bg-white p-4 rounded-lg shadow">

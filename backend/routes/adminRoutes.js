@@ -47,9 +47,9 @@ router.get("/profile", async (req, res) => {
       "SELECT COUNT(*) AS total_hod FROM hod_profiles"
     );
 
-    // Get visitor statistics
+    // Get today's visitor statistics
     const [[visitorStats]] = await db.query(
-      "SELECT COALESCE(SUM(visitor_count), 0) as total_visits, COALESCE(SUM(unique_visitors), 0) as total_unique_visitors FROM visitor_stats"
+      "SELECT COALESCE(visitor_count, 0) as today_visits, COALESCE(unique_visitors, 0) as today_unique_visitors FROM visitor_stats WHERE visit_date = CURDATE()"
     );
 
     // Get live visitors (active in last 5 minutes)
@@ -65,8 +65,8 @@ router.get("/profile", async (req, res) => {
       total_faculty,
       total_hod,
       visitor_stats: {
-        total_visits: visitorStats?.total_visits || 0,
-        total_unique_visitors: visitorStats?.total_unique_visitors || 0,
+        today_visits: visitorStats?.today_visits || 0,
+        today_unique_visitors: visitorStats?.today_unique_visitors || 0,
         live_visitors: liveVisitors?.live_visitors || 0
       }
     });
