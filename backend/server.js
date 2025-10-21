@@ -61,6 +61,18 @@ cron.schedule("0 3 * * *", async () => {
   }
 });
 
+// Schedule: Every 5 minutes - Clean up inactive visitors
+cron.schedule("*/5 * * * *", async () => {
+  try {
+    const db = require("./config/db");
+    await db.query(
+      "UPDATE visitor_sessions SET is_active = 0 WHERE last_visit < DATE_SUB(NOW(), INTERVAL 5 MINUTE)"
+    );
+  } catch (error) {
+    logger.error(`[CRON] Error cleaning up visitors: ${error.message}`);
+  }
+});
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, "0.0.0.0", () =>
   console.log(`Server is running on http://localhost:${PORT}`)

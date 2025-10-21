@@ -52,6 +52,11 @@ router.get("/profile", async (req, res) => {
       "SELECT COALESCE(SUM(visitor_count), 0) as total_visits, COALESCE(SUM(unique_visitors), 0) as total_unique_visitors FROM visitor_stats"
     );
 
+    // Get live visitors (active in last 5 minutes)
+    const [[liveVisitors]] = await db.query(
+      "SELECT COUNT(*) as live_visitors FROM visitor_sessions WHERE is_active = 1 AND last_visit >= DATE_SUB(NOW(), INTERVAL 5 MINUTE)"
+    );
+
     logger.info(`Admin profile fetched for userId: ${userId}`);
     res.json({
       ...profile,
@@ -61,7 +66,8 @@ router.get("/profile", async (req, res) => {
       total_hod,
       visitor_stats: {
         total_visits: visitorStats?.total_visits || 0,
-        total_unique_visitors: visitorStats?.total_unique_visitors || 0
+        total_unique_visitors: visitorStats?.total_unique_visitors || 0,
+        live_visitors: liveVisitors?.live_visitors || 0
       }
     });
   } catch (err) {

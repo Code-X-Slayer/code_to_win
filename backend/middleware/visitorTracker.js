@@ -22,14 +22,14 @@ const visitorTracker = async (req, res, next) => {
     if (existingSession.length === 0) {
       // New visitor
       await db.query(
-        "INSERT INTO visitor_sessions (session_id, ip_address, user_agent) VALUES (?, ?, ?)",
+        "INSERT INTO visitor_sessions (session_id, ip_address, user_agent, is_active) VALUES (?, ?, ?, 1)",
         [sessionId, ipAddress, userAgent]
       );
       isNewVisitor = true;
     } else {
-      // Update existing session
+      // Update existing session as active
       await db.query(
-        "UPDATE visitor_sessions SET last_visit = CURRENT_TIMESTAMP, visit_count = visit_count + 1 WHERE session_id = ?",
+        "UPDATE visitor_sessions SET last_visit = CURRENT_TIMESTAMP, visit_count = visit_count + 1, is_active = 1 WHERE session_id = ?",
         [sessionId]
       );
     }

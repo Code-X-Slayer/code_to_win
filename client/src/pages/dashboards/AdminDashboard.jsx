@@ -330,7 +330,7 @@ function AdminDashboard() {
             <UserProfile user={currentUser} />
 
             {/* Section Stats Cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
               <div className="bg-white p-4 rounded-lg shadow">
                 <h2 className="text-gray-500 text-sm">Total Students</h2>
                 <p className="text-2xl font-bold">
@@ -351,6 +351,15 @@ function AdminDashboard() {
                 <h2 className="text-gray-500 text-sm">Total Visitors</h2>
                 <p className="text-2xl font-bold">
                   {currentUser.visitor_stats?.total_visits || 0}
+                </p>
+              </div>
+              <div className="bg-white p-4 rounded-lg shadow">
+                <h2 className="text-gray-500 text-sm flex items-center gap-1">
+                  Live Visitors
+                  <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                </h2>
+                <p className="text-2xl font-bold text-green-600">
+                  {currentUser.visitor_stats?.live_visitors || 0}
                 </p>
               </div>
             </div>
