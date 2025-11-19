@@ -18,7 +18,7 @@ const RankBadge = ({ rank }) => {
 function Home() {
   const [ranks, setRanks] = useState([]);
   const [loading, setLoading] = useState(false);
-  
+
   const fetchRanks = async () => {
     try {
       setLoading(true);
@@ -55,8 +55,10 @@ function Home() {
       <img src="/home_bg.svg" alt="" className="absolute -z-10 top-0 w-full" />
       <Navbar />
       <div className="relative flex flex-col lg:flex-row px-5 lgS:px-10 xl:px-40 justify-between items-center">
-        <div className="flex flex-col items-center lg:items-start text-center lg:text-left "
-          data-aos="fade-right">
+        <div
+          className="flex flex-col items-center lg:items-start text-center lg:text-left "
+          data-aos="fade-right"
+        >
           <div className="flex flex-col">
             <h1 className="text-2xl lg:text-3xl xl:text-6xl font-bold tracking-wide mb-4">
               Track Your Coding <br /> Journey with Precision
@@ -67,17 +69,21 @@ function Home() {
             </p>
           </div>
           <div className="flex justify-center gap-4">
-            <Link to="/checkscore"><button className="bg-blue-600 py-2 px-4 rounded-lg text-base hover:bg-transparent border border-blue-600 text-white hover:text-blue-600">
-              Check Your Score
-            </button></Link>
+            <Link to="/checkscore">
+              <button className="bg-blue-600 py-2 px-4 rounded-lg text-base hover:bg-transparent border border-blue-600 text-white hover:text-blue-600">
+                Check Your Score
+              </button>
+            </Link>
           </div>
         </div>
-        <div className="my-8"
-          data-aos="fade-left">
+        <div className="my-8" data-aos="fade-left">
           <Login />
         </div>
       </div>
-      <section className="relative w-[95%] xl:w-3/4 mx-auto  mb-20 z-20" data-aos="fade">
+      <section
+        className="relative w-[95%] xl:w-3/4 mx-auto  mb-20 z-20"
+        data-aos="fade"
+      >
         {/* <img
           src="/owl.gif"
           alt=""
@@ -85,9 +91,7 @@ function Home() {
         /> */}
         <div className="bg-yellow-50 py-5 px-5 lg:px-28 flex items-center gap-5 rounded-t-2xl border-b-2 border-b-gray-200 text-center">
           <img src="/trophy.png" alt="" />
-          <p className="font-bold text-base lg:text-xl">
-            Top Coders This Month
-          </p>
+          <p className="font-bold text-base lg:text-xl">Top Coders</p>
         </div>
         <table className="min-w-full px-10 bg-white rounded-b-2xl overflow-x-scroll shadow-2xl text-sm md:text-base">
           <thead className=" text-center">

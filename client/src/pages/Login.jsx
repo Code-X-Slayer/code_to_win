@@ -76,7 +76,7 @@ const Login = () => {
                 key={role}
                 type="button"
                 onClick={() => handleRoleChange(role)}
-                className={`px-4 py-2 rounded-md capitalize text-sm font-medium transition-colors ${
+                className={`px-4 py-2 rounded-md uppercase text-sm font-medium transition-colors ${
                   selectedRole === role
                     ? "bg-blue-100 text-blue-700 border-2 border-blue-500"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200 border-2 border-transparent"
@@ -110,7 +110,12 @@ const Login = () => {
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent pl-10"
                 placeholder="22A91XXXX"
                 autoComplete="username"
-                onChange={(e) => handleChange("userId", e.target.value.trim().replace(/\s+/g, '').toUpperCase())}
+                onChange={(e) =>
+                  handleChange(
+                    "userId",
+                    e.target.value.trim().replace(/\s+/g, "").toUpperCase()
+                  )
+                }
               />
             </div>
           </div>
