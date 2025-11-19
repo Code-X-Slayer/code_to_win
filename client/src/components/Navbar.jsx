@@ -57,7 +57,7 @@ const Navbar = ({ toggleSidebar }) => {
               <div className="flex items-center gap-2 font-medium p-2">
                 <FiUser />
                 {currentUser?.name}
-                <span className="text-sm font-normal text-gray-500">
+                <span className="text-sm font-normal text-gray-500 uppercase">
                   ({currentUser?.role})
                 </span>
               </div>

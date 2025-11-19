@@ -17,7 +17,7 @@ const RankBadge = ({ rank }) => {
     return <span className=" text-white px-2 py-1 rounded-full">🥈</span>;
   if (rank === 3)
     return <span className=" text-white px-2 py-1 rounded-full">🥉</span>;
-  return <span>{rank}th</span>;
+  return <span>{rank}</span>;
 };
 
 const TOP_X_OPTIONS = [
@@ -438,7 +438,11 @@ const RankingTable = ({ filter }) => {
               </tr>
             ) : (
               paginatedRanks.map((s) => (
-                <tr key={s.student_id} className="hover:bg-gray-50 text-center" data-aos="fade-left">
+                <tr
+                  key={s.student_id}
+                  className="hover:bg-gray-50 text-center"
+                  data-aos="fade-left"
+                >
                   <td className="py-3 px-1 md:px-4 ">
                     <RankBadge rank={s.rank} />
                   </td>
