@@ -15,6 +15,7 @@ import {
   FiMail,
   FiBarChart2,
   FiDownload,
+  FiFileText,
 } from "react-icons/fi";
 import { useMeta } from "../../context/MetaContext";
 import toast from "react-hot-toast";
@@ -65,6 +66,9 @@ const BatchSectionConfig = lazy(() =>
 );
 const AddAdminModal = lazy(() =>
   import("../../components/modals/AddAdminModal")
+);
+const CodingPointsReport = lazy(() =>
+  import("../../components/ui/CodingPointsReport")
 );
 
 const metricToPlatform = {
@@ -208,6 +212,7 @@ function AdminDashboard() {
     { key: "ContactRequests", label: "Contact Requests", icon: <FiMail /> },
     { key: "Lifecycle", label: "Student Lifecycle", icon: <FiTrendingUp /> },
     { key: "SectionConfig", label: "Section Config", icon: <FiSettings /> },
+    { key: "CodingPointsReport", label: "Points Report", icon: <FiFileText /> },
     { key: "ExportData", label: "Export Data", icon: <FiDownload /> },
     ...(currentUser.user_id === "SA07" || currentUser.user_id === "ADMIN"
       ? [{ key: "AdminList", label: "Admin List", icon: <FiUserCheck /> }]
@@ -439,6 +444,14 @@ function AdminDashboard() {
             {selectedTab === "StudentRanking" && (
               <Suspense fallback={<LoadingSpinner />}>
                 <RankingTable filter={true} />
+              </Suspense>
+            )}
+
+            {selectedTab === "Ranking" && <RankingTable />}
+
+            {selectedTab === "CodingPointsReport" && (
+              <Suspense fallback={<LoadingSpinner />}>
+                <CodingPointsReport user={currentUser} />
               </Suspense>
             )}
 

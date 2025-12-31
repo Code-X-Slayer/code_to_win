@@ -39,6 +39,7 @@ app.use("/api/export", require("./routes/exportRoutes"));
 app.use("/api/download", require("./routes/downloadRoutes"));
 app.use("/api/", require("./routes/managementRoutes"));
 app.use("/api/achievements", require("./routes/achievementRoutes")); // Achievements
+app.use("/api/reports", require("./routes/reportRoutes"));
 
 // Serve uploaded files statically
 app.use("/uploads", express.static("uploads"));

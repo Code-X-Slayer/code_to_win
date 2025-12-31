@@ -30,7 +30,11 @@ import {
   FiRefreshCw,
   FiAward,
   FiHome,
+  FiFileText,
 } from "react-icons/fi";
+const CodingPointsReport = lazy(() =>
+  import("../../components/ui/CodingPointsReport")
+);
 
 // Lazy-loaded components
 const RankingTable = lazy(() => import("../../components/Ranking"));
@@ -73,6 +77,7 @@ function FacultyDashboard() {
       icon: <FiCheckSquare />,
     },
     { key: "ExportData", label: "Export Data", icon: <FiDownload /> },
+    { key: "CodingPointsReport", label: "Points Report", icon: <FiFileText /> },
     { key: "MoreActions", label: "More Actions", icon: <FiUserPlus /> },
   ];
 
@@ -404,6 +409,14 @@ function FacultyDashboard() {
                           students={students}
                           filenamePrefix={`Faculty_Export_${currentUser?.dept_code}`}
                         />
+                      </Suspense>
+                    </div>
+                  )}
+
+                  {selectedTab === "CodingPointsReport" && (
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                      <Suspense fallback={<LoadingSpinner />}>
+                        <CodingPointsReport user={currentUser} />
                       </Suspense>
                     </div>
                   )}

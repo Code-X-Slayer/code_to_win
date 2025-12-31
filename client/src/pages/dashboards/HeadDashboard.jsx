@@ -26,7 +26,11 @@ import {
   FiUserPlus,
   FiClock,
   FiLayers,
+  FiFileText,
 } from "react-icons/fi";
+const CodingPointsReport = lazy(() =>
+  import("../../components/ui/CodingPointsReport")
+);
 
 // Lazy-loaded components
 const RankingTable = lazy(() => import("../../components/Ranking"));
@@ -549,6 +553,7 @@ function HeadDashboard() {
     { key: "FacultyManagment", label: "Faculty Management", icon: <FiGrid /> },
     { key: "ExportData", label: "Export Data", icon: <FiDownload /> },
     { key: "Lifecycle", label: "Student Lifecycle", icon: <FiTrendingUp /> },
+    { key: "CodingPointsReport", label: "Points Report", icon: <FiFileText /> },
     { key: "More", label: "More Actions", icon: <FiUserPlus /> },
   ];
 
@@ -742,6 +747,12 @@ function HeadDashboard() {
             {selectedTab === "Lifecycle" && (
               <Suspense fallback={<LoadingSpinner />}>
                 <LifecycleManagement fixedDept={currentUser?.dept_code} />
+              </Suspense>
+            )}
+
+            {selectedTab === "CodingPointsReport" && (
+              <Suspense fallback={<LoadingSpinner />}>
+                <CodingPointsReport user={currentUser} />
               </Suspense>
             )}
 
