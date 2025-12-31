@@ -760,7 +760,7 @@ function HeadDashboard() {
           </div>
         </div>
       </div>
-      <Footer />
+      {/* <Footer /> */}
     </>
   );
 }

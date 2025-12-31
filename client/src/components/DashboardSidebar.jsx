@@ -68,13 +68,22 @@ const DashboardSidebar = ({
                   onLogout();
                   if (window.innerWidth < 1024) toggleSidebar();
                 }}
-                className="w-full text-left px-3 py-2 rounded-lg transition-colors flex items-center gap-3 text-red-600 hover:bg-red-50"
+                className="w-full text-left px-3 py-2 rounded-lg transition-colors flex items-center gap-3 text-red-600 border border-red-600 hover:bg-red-50"
               >
                 <FiLogOut className="text-lg" />
                 <span>Logout</span>
               </button>
             </div>
           )}
+          <div className="mt-2 text-center text-base text-black border-gray-300">
+            Developed by{" "}
+            <a
+              href="https://ofzen.in/"
+              className="text-blue-400 hover:underline font-medium"
+            >
+              Ofzen.in
+            </a>
+          </div>
         </nav>
       </div>
     </>

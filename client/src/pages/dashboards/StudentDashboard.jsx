@@ -718,7 +718,7 @@ const StudentDashboard = () => {
             )}
           </main>
         </div>
-        <Footer />
+        {/* <Footer /> */}
       </div>
     </>
   );

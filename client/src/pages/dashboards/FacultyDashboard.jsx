@@ -508,7 +508,7 @@ function FacultyDashboard() {
           </div>
         </div>
       </div>
-      <Footer />
+      {/* <Footer /> */}
     </>
   );
 }
