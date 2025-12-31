@@ -1,26 +1,26 @@
 import React from "react";
-import { motion } from "framer-motion";
+
 const StatsCard = ({ icon, title, value, color }) => {
   const colorMap = {
-    blue: "bg-[#eff6ff] text-[#1447e6] ",
-    purple: "bg-[#faf5ff] text-[#9810fa]",
-    success: "bg-[#f0fdf4] text-[#1c7800]",
-    warning: "bg-[#fefce8] text-[#a96b00]",
-    error: "bg-[#fef2f2] text-[#bc0000]",
+    blue: "bg-blue-50 text-blue-600",
+    purple: "bg-purple-50 text-purple-600",
+    success: "bg-green-50 text-green-600",
+    warning: "bg-yellow-50 text-yellow-600",
+    error: "bg-red-50 text-red-600",
   };
 
   return (
-    <div className="flex items-center bg-white rounded-lg border border-gray-200 md:p-4  text-center">
-      <div
-        className={`w-12 h-12 rounded-lg flex items-center justify-center ${colorMap[color]}`}
-      >
-        {icon}
-      </div>
-      <div className="ml-4 text-left">
-        <h3 className="text-sm font-medium text-gray-500">{title}</h3>
-        <div className="md:text-2xl text-lg font-semibold text-gray-900">
-          {value}
+    <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between h-full hover:shadow-md transition-shadow duration-200">
+      <div className="flex items-start justify-between mb-2">
+        <div
+          className={`w-10 h-10 rounded-full flex items-center justify-center ${colorMap[color]}`}
+        >
+          {React.cloneElement(icon, { size: 20 })}
         </div>
+      </div>
+      <div>
+        <div className="text-2xl font-bold text-gray-900 mb-1">{value}</div>
+        <div className="text-sm font-medium text-gray-500">{title}</div>
       </div>
     </div>
   );

@@ -10,22 +10,37 @@ const PlatformCard = ({
   subtitle = "Problems Solved",
 }) => (
   <div
-    className={`bg-[#ffffff] p-4 rounded-xl shadow-sm hover:shadow-md duration-300 trasition-all w-full ${color}`} data-aos={`${ani}`}
+    className={`bg-white p-6 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 w-full group ${color}`}
+    data-aos={ani}
   >
-    <div className="flex  justify-between items-center md:mb-2 ">
-      <h2 className="font-semibold text-base md:text-lg overflow-hidden max-w-lg">{name}</h2>
-      <div >
-        <img src={icon} alt={`${name} logo`} className="md:max-w-20 md:h-20 max-w-12 h-12 object-contain" />
+    <div className="flex justify-between items-start mb-4">
+      <div>
+        <h2 className="font-bold text-gray-800 text-lg">{name}</h2>
+        <div className="text-sm text-gray-500 font-medium">{subtitle}</div>
+      </div>
+      <div className="p-2 bg-gray-50 rounded-xl group-hover:scale-110 transition-transform duration-300">
+        <img
+          src={icon}
+          alt={`${name} logo`}
+          className="w-8 h-8 object-contain"
+        />
       </div>
     </div>
-    <div className="text-3xl font-bold">{total}</div>
-    <div className="text-sm text-gray-500 mb-2">{subtitle}</div>
+
+    <div className="text-4xl font-extrabold text-gray-900 mb-4 tracking-tight">
+      {total}
+    </div>
+
     {breakdown && (
-      <div className="grid md:grid-cols-3  text-sm text-gray-700 space-x-3">
+      <div className="pt-4 border-t border-gray-100 grid grid-cols-2 gap-y-2 gap-x-4">
         {Object.entries(breakdown).map(([label, count]) => (
-          <span key={label}>
-            {label}: {count}
-          </span>
+          <div
+            key={label}
+            className="flex justify-between items-center text-xs"
+          >
+            <span className="text-gray-500 font-medium">{label}</span>
+            <span className="font-bold text-gray-700">{count}</span>
+          </div>
         ))}
       </div>
     )}

@@ -7,11 +7,14 @@ import {
   FiX,
   FiPause,
   FiAlertTriangle,
+  FiHome,
+  FiUser,
 } from "react-icons/fi";
 import toast from "react-hot-toast";
 import { useAuth } from "../../context/AuthContext";
 import dayjs from "dayjs";
 import Navbar from "../../components/Navbar";
+import DashboardSidebar from "../../components/DashboardSidebar";
 import StatsCard from "../../components/ui/StatsCard";
 import PlatformCard from "../../components/ui/PlatformCard";
 import {
@@ -20,15 +23,20 @@ import {
   UserResetPasswordModal,
 } from "../../components/Modals";
 import Footer from "../../components/Footer";
+
 const StudentDashboard = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [editProfile, setEditprofile] = useState(false);
   const [updateProfile, setUpdateProfile] = useState(false);
   const [changepassword, setChangepassword] = useState(false);
-  const { currentUser, checkAuth } = useAuth();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [selectedTab, setSelectedTab] = useState("Overview");
+
+  const { currentUser, checkAuth, logout } = useAuth();
   const formattedDate = dayjs(
     currentUser.performance.combined.last_updated
   ).format("DD/MM/YYYY | hh:mm A");
+
   const totalContests =
     currentUser.performance.platformWise.leetcode.contests +
     currentUser.performance.platformWise.codechef.contests;
@@ -47,6 +55,7 @@ const StudentDashboard = () => {
     "codechef",
     "geeksforgeeks",
     "hackerrank",
+    "github",
   ]
     .filter(
       (platform) =>
@@ -80,353 +89,466 @@ const StudentDashboard = () => {
     }
   };
 
+  const menuItems = [
+    { key: "Overview", label: "Dashboard", icon: <FiHome /> },
+    { key: "Profile", label: "My Profile", icon: <FiUser /> },
+    // Future features can be added here
+  ];
+
   return (
     <>
-      {editProfile && (
-        <EditModal
-          user={currentUser}
-          onSuccess={() => checkAuth()}
-          onClose={() => setEditprofile(false)}
-        />
-      )}
-      {updateProfile && (
-        <UpdateProfileModal
-          user={currentUser}
-          onSuccess={() => checkAuth()}
-          onClose={() => setUpdateProfile(false)}
-        />
-      )}
-      {changepassword && (
-        <UserResetPasswordModal
-          user={currentUser}
-          onClose={() => setChangepassword(false)}
-        />
-      )}
-      <Navbar />
-
-      <div className=" bg-gray-100/50 p-6 lg:px-10 xl:px-40">
-        {/* Suspended Platforms Notification */}
-        {suspendedPlatforms.length > 0 && (
-          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4 rounded">
-            <div className="flex items-center">
-              <FiAlertTriangle className="text-yellow-400 mr-2" />
-              <div>
-                <p className="text-sm font-medium text-yellow-800">
-                  Platform Update Issues
-                </p>
-                <p className="text-sm text-yellow-700">
-                  {suspendedPlatforms.join(", ")} temporarily suspended due to
-                  connection issues. We'll retry automatically.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-        <div className="text-right text-sm text-gray-500 mb-2">
-          Last Updated on {formattedDate}
-        </div>
-        {/* Cover Section */}
-        <div className="w-full h-52 bg-gradient-to-r from-pink-200 via-orange-100 to-teal-100 rounded-t-xl relative overflow-hidden">
-          <img
-            src="/profile_bg.jpeg"
-            alt="Background"
-            className="w-full h-full object-cover opacity-70"
+      <div className="min-h-screen bg-gray-50 flex flex-col">
+        {/* Modals */}
+        {editProfile && (
+          <EditModal
+            user={currentUser}
+            onSuccess={() => checkAuth()}
+            onClose={() => setEditprofile(false)}
           />
-        </div>
+        )}
+        {updateProfile && (
+          <UpdateProfileModal
+            user={currentUser}
+            onSuccess={() => checkAuth()}
+            onClose={() => setUpdateProfile(false)}
+          />
+        )}
+        {changepassword && (
+          <UserResetPasswordModal
+            user={currentUser}
+            onClose={() => setChangepassword(false)}
+          />
+        )}
 
-        {/* Profile Section */}
-        <div className="p-4 flex md:flex-row flex-col gap-4">
-          {/* Sidebar */}
-          <div
-            className="bg-white rounded-xl shadow-lg p-6  lg:max-w-sm h-fit -mt-24 z-20"
-            data-aos="fade-out"
-          >
-            <div className="flex flex-r items-center mb-4">
-              <div className="bg-blue-100 text-blue-800 rounded-lg w-24 h-24 flex  items-center text-4xl justify-center font-bold">
-                {currentUser.name
-                  ?.split(" ")
-                  .map((n) => n[0])
-                  .join("")
-                  .slice(0, 2)}
-              </div>
-              {/* <img
-                src="/profile_bg.jpeg"
-                alt="sunil"
-                className="object-cover w-24 h-24 rounded  mb-2"
-              /> */}
-              <div className="ml-3">
-                <h2 className="text-lg font-bold">{currentUser.name}</h2>
-                <div className="flex gap-10">
+        <Navbar toggleSidebar={() => setSidebarOpen(true)} />
+
+        <div className="flex flex-1 relative">
+          <DashboardSidebar
+            isOpen={sidebarOpen}
+            toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+            selectedTab={selectedTab}
+            setSelectedTab={setSelectedTab}
+            menuItems={menuItems}
+            onLogout={logout}
+          />
+
+          <main className="flex-1 lg:ml-64 p-4 md:p-8 transition-all duration-300">
+            {/* Suspended notification */}
+            {suspendedPlatforms.length > 0 && (
+              <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 rounded-r-lg shadow-sm">
+                <div className="flex items-center">
+                  <FiAlertTriangle className="text-yellow-400 mr-2" />
                   <div>
-                    <p className="text-sm text-gray-500 font-semibold  mt-2">
-                      University Rank
+                    <p className="text-sm font-medium text-yellow-800">
+                      Platform Update Check
                     </p>
-                    <p className="text-xl font-semibold text-gray-800">
-                      {currentUser.overall_rank}
-                    </p>
-                  </div>
-                  <div className="bg-green-200 rounded-full font-semibold md:w-16 md:h-16  w-14 h-14 flex flex-col items-center p-3 justify-center">
-                    <p className="text-sm text-gray-500  ">Score</p>
-
-                    <p className="md:text-lg text-base  text-gray-900">
-                      {currentUser.score}
+                    <p className="text-sm text-yellow-700">
+                      {suspendedPlatforms.join(", ")} temporary connection
+                      issues. Will retry shortly.
                     </p>
                   </div>
                 </div>
               </div>
-            </div>
-            <hr className="my-4" />
-            <div className="text-justify space-y-4">
-              <button
-                onClick={() => setEditprofile(true)}
-                className="text-blue-600 underline float-end cursor-pointer"
-              >
-                Edit
-              </button>
+            )}
 
-              <p className="font-semibold">Personal Information</p>
+            {selectedTab === "Overview" && (
+              <>
+                {/* Hero Section */}
+                <div className="relative rounded-3xl overflow-hidden mb-8 shadow-xl bg-gradient-to-r from-violet-600 via-indigo-600 to-blue-600 text-white p-6 md:p-10">
+                  {/* Abstract decorative circles */}
+                  <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 rounded-full bg-white/10 blur-3xl"></div>
+                  <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-60 h-60 rounded-full bg-blue-500/20 blur-2xl"></div>
 
-              <p className="flex  justify-between">
-                <span className="font-semibold text-left line-clamp-3">
-                  Name:
-                </span>{" "}
-                {currentUser.name}
-              </p>
-              <p className="flex justify-between">
-                <span className="font-semibold text-left">Roll No:</span>{" "}
-                {currentUser.student_id}
-              </p>
-              <p className="flex justify-between">
-                <span className="font-semibold text-left">Email:</span>{" "}
-                <span className="inline-block  text-end w-2/3 truncate">
-                  {currentUser.email}
-                </span>
-              </p>
-              <button
-                onClick={() => setChangepassword(true)}
-                className="text-blue-600 underline text-sm float-right cursor-pointer mb-2"
-              >
-                changepassword
-              </button>
-            </div>
-            <hr className="my-4 w-full" />
-            <div className="text-justify space-y-4">
-              <button
-                onClick={() => setUpdateProfile(true)}
-                className="text-blue-600 underline float-end cursor-pointer"
-              >
-                Update Profiles
-              </button>
+                  <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+                    <div className="md:w-2/3">
+                      <div className="flex items-center gap-4 mb-2">
+                        <span className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider border border-white/10">
+                          Student Dashboard
+                        </span>
+                        <span className="text-blue-100 text-xs flex items-center gap-1">
+                          <FiClock size={12} />
+                          Updated: {formattedDate}
+                        </span>
+                      </div>
+                      <h1 className="text-3xl md:text-5xl font-bold mb-2">
+                        Welcome back, {currentUser.name?.split(" ")[0]}!
+                      </h1>
+                      <p className="text-blue-100 text-lg max-w-xl">
+                        Track your progress, analyze your performance, and keep
+                        pushing your limits across all coding platforms.
+                      </p>
 
-              <p className="font-semibold">Coding Profiles</p>
+                      <div className="flex flex-wrap gap-3 mt-6">
+                        <button
+                          onClick={() => setUpdateProfile(true)}
+                          className="px-5 py-2.5 bg-white text-blue-700 font-semibold rounded-xl shadow-lg hover:shadow-xl hover:bg-gray-50 transition-all flex items-center gap-2 cursor-pointer"
+                        >
+                          Connect Profiles
+                        </button>
+                        <button
+                          onClick={handleRefresh}
+                          className="px-5 py-2.5 bg-blue-700/50 backdrop-blur-md text-white font-semibold rounded-xl border border-white/20 hover:bg-blue-700/70 transition-all flex items-center gap-2 cursor-pointer"
+                          disabled={refreshing}
+                        >
+                          <FiRefreshCw
+                            className={refreshing ? "animate-spin" : ""}
+                          />
+                          {refreshing ? "Refreshing..." : "Sync Data"}
+                        </button>
+                        <button
+                          onClick={() => setEditprofile(true)}
+                          className="px-5 py-2.5 bg-transparent border border-white/30 text-white font-medium rounded-xl hover:bg-white/10 transition-all"
+                        >
+                          Edit Profile
+                        </button>
+                      </div>
+                    </div>
 
-              <div className="flex flex-col gap-2">
-                {["leetcode", "codechef", "geeksforgeeks", "hackerrank"].map(
-                  (platform) => {
-                    const idKey = `${platform}_id`;
-                    const statusKey = `${platform}_status`;
-                    const username =
-                      currentUser.coding_profiles?.[idKey] || "Not Provided";
-                    const status = currentUser.coding_profiles?.[statusKey];
-                    return (
+                    {/* Floating Glass Stats */}
+                    <div className="flex gap-4">
+                      <div className="bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-2xl flex flex-col items-center min-w-[100px]">
+                        <span className="text-blue-200 text-sm font-medium">
+                          Rank
+                        </span>
+                        <span className="text-3xl font-bold">
+                          {currentUser.overall_rank}
+                        </span>
+                      </div>
+                      <div className="bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-2xl flex flex-col items-center min-w-[100px]">
+                        <span className="text-blue-200 text-sm font-medium">
+                          Score
+                        </span>
+                        <span className="text-3xl font-bold text-green-300">
+                          {currentUser.score}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Quick Stats Grid */}
+                <h2 className="text-xl font-bold text-gray-800 mb-4 px-2">
+                  Performance Overview
+                </h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                  <StatsCard
+                    icon={<FiCode />}
+                    title="Problems Solved"
+                    value={currentUser?.performance?.combined?.totalSolved || 0}
+                    color="blue"
+                  />
+                  <StatsCard
+                    icon={<FiCode />}
+                    title="Contests"
+                    value={totalContests}
+                    color="success"
+                  />
+                  <StatsCard
+                    icon={<FiCode />}
+                    title="Stars Earned"
+                    value={totalStars}
+                    color="warning"
+                  />
+                  <StatsCard
+                    icon={<FiCode />}
+                    title="Badges"
+                    value={totalBadges}
+                    color="purple"
+                  />
+                </div>
+
+                {/* Platform Cards Grid */}
+                <div className="flex items-center justify-between mb-4 px-2">
+                  <h2 className="text-xl font-bold text-gray-800">
+                    Active Platforms
+                  </h2>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-12">
+                  {currentUser.coding_profiles?.leetcode_status ===
+                    "accepted" && (
+                    <PlatformCard
+                      name="LeetCode"
+                      color="border-l-4 border-yellow-500"
+                      icon="/LeetCode_logo.png"
+                      ani="fade-up"
+                      total={
+                        currentUser.performance.platformWise.leetcode.easy +
+                        currentUser.performance.platformWise.leetcode.medium +
+                        currentUser.performance.platformWise.leetcode.hard
+                      }
+                      breakdown={{
+                        Easy: currentUser.performance.platformWise.leetcode
+                          .easy,
+                        Medium:
+                          currentUser.performance.platformWise.leetcode.medium,
+                        Hard: currentUser.performance.platformWise.leetcode
+                          .hard,
+                        contests:
+                          currentUser.performance.platformWise.leetcode
+                            .contests,
+                        Badges:
+                          currentUser.performance.platformWise.leetcode.badges,
+                      }}
+                    />
+                  )}
+                  {currentUser.coding_profiles?.codechef_status ===
+                    "accepted" && (
+                    <PlatformCard
+                      name="CodeChef"
+                      color="border-l-4 border-orange-600"
+                      icon="/codechef_logo.png"
+                      ani="fade-up"
+                      total={
+                        currentUser.performance.platformWise.codechef.contests
+                      }
+                      subtitle="Contests Participated"
+                      breakdown={{
+                        "Problems Solved":
+                          currentUser.performance.platformWise.codechef
+                            .problems,
+                        Star: currentUser.performance.platformWise.codechef
+                          .stars,
+                        Badges:
+                          currentUser.performance.platformWise.codechef.badges,
+                      }}
+                    />
+                  )}
+                  {currentUser.coding_profiles?.geeksforgeeks_status ===
+                    "accepted" && (
+                    <PlatformCard
+                      name="GeeksforGeeks"
+                      color="border-l-4 border-green-600"
+                      icon="/GeeksForGeeks_logo.png"
+                      ani="fade-down"
+                      total={
+                        currentUser.performance.platformWise.gfg.school +
+                        currentUser.performance.platformWise.gfg.basic +
+                        currentUser.performance.platformWise.gfg.easy +
+                        currentUser.performance.platformWise.gfg.medium +
+                        currentUser.performance.platformWise.gfg.hard
+                      }
+                      breakdown={{
+                        School: currentUser.performance.platformWise.gfg.school,
+                        Basic: currentUser.performance.platformWise.gfg.basic,
+                        Easy: currentUser.performance.platformWise.gfg.easy,
+                        Medium: currentUser.performance.platformWise.gfg.medium,
+                        Hard: currentUser.performance.platformWise.gfg.hard,
+                      }}
+                    />
+                  )}
+                  {currentUser.coding_profiles?.hackerrank_status ===
+                    "accepted" && (
+                    <PlatformCard
+                      name="HackerRank"
+                      color="border-l-4 border-gray-800"
+                      icon="/HackerRank_logo.png"
+                      ani="fade-down"
+                      total={
+                        currentUser.performance.platformWise.hackerrank.badges
+                      }
+                      subtitle="Stars Gained"
+                      breakdown={{
+                        Badges: (
+                          currentUser.performance.platformWise.hackerrank
+                            .badgesList || []
+                        )
+                          .map((badge) => `${badge.name}: ${badge.stars}★`)
+                          .join(", "),
+                      }}
+                    />
+                  )}
+                  {currentUser.coding_profiles?.github_id && (
+                    <PlatformCard
+                      name="GitHub"
+                      color="border-l-4 border-black"
+                      icon="https://cdn-icons-png.flaticon.com/512/25/25231.png"
+                      ani="fade-up"
+                      total={currentUser.performance.platformWise.github.repos}
+                      subtitle="Public Repositories"
+                      breakdown={{
+                        "Total Contributions":
+                          currentUser.performance.platformWise.github
+                            .contributions,
+                      }}
+                    />
+                  )}
+
+                  {/* Add Platform Prompt - if few platforms connected */}
+                  <div
+                    onClick={() => setUpdateProfile(true)}
+                    className="border-2 border-dashed border-gray-300 rounded-xl p-6 flex flex-col items-center justify-center text-gray-400 hover:border-blue-400 hover:text-blue-500 hover:bg-blue-50 transition-all cursor-pointer min-h-[200px]"
+                  >
+                    <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-3">
+                      <FiCode size={24} />
+                    </div>
+                    <span className="font-semibold">
+                      Connect More Platforms
+                    </span>
+                    <span className="text-xs mt-1">
+                      Add CodeChef, HackerRank & more
+                    </span>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {selectedTab === "Profile" && (
+              <div className="max-w-4xl mx-auto">
+                <div className="bg-white rounded-2xl shadow-sm p-8 mb-6">
+                  <div className="flex items-center gap-6 mb-8">
+                    <div className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center text-3xl font-bold text-blue-600">
+                      {currentUser.name
+                        ?.split(" ")
+                        .map((n) => n[0])
+                        .join("")
+                        .slice(0, 2)}
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold text-gray-900">
+                        {currentUser.name}
+                      </h2>
+                      <p className="text-gray-500">{currentUser.email}</p>
+                      <div className="flex gap-3 mt-3">
+                        <button
+                          onClick={() => setEditprofile(true)}
+                          className="text-sm px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                        >
+                          Edit Profile
+                        </button>
+                        <button
+                          onClick={() => setChangepassword(true)}
+                          className="text-sm px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                        >
+                          Change Password
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-12">
+                    <div>
+                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">
+                        Roll Number
+                      </label>
+                      <p className="text-lg font-medium text-gray-900">
+                        {currentUser.student_id}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">
+                        Degree
+                      </label>
+                      <p className="text-lg font-medium text-gray-900">
+                        {currentUser.degree}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">
+                        Department
+                      </label>
+                      <p className="text-lg font-medium text-gray-900">
+                        {currentUser.dept_name}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">
+                        Year
+                      </label>
+                      <p className="text-lg font-medium text-gray-900">
+                        {currentUser.year}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">
+                        Section
+                      </label>
+                      <p className="text-lg font-medium text-gray-900">
+                        {currentUser.section}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">
+                        College
+                      </label>
+                      <p className="text-lg font-medium text-gray-900">
+                        {currentUser.college}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-2xl shadow-sm p-8">
+                  <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-xl font-bold text-gray-900">
+                      Connected Profiles
+                    </h3>
+                    <button
+                      onClick={() => setUpdateProfile(true)}
+                      className="text-blue-600 font-medium hover:underline"
+                    >
+                      Manage Connections
+                    </button>
+                  </div>
+                  <div className="space-y-4">
+                    {[
+                      "leetcode",
+                      "codechef",
+                      "geeksforgeeks",
+                      "hackerrank",
+                      "github",
+                    ].map((platform) => (
                       <div
                         key={platform}
-                        className="flex justify-between items-center"
+                        className="flex items-center justify-between p-4 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors"
                       >
-                        <span className="font-semibold text-left••••••••••••••">
-                          {platform.charAt(0).toUpperCase() + platform.slice(1)}
-                        </span>
-                        <p className="text-gray-500 text-end inline-block  truncate ">
-                          <span className="inline-block w-1/2 truncate text-end">
-                            {username}
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center p-2">
+                            {/* Simple fallback icons or logic to reuse PlatformCard icons could go here */}
+                            <span className="font-bold text-gray-500">
+                              {platform[0].toUpperCase()}
+                            </span>
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-900 capitalize">
+                              {platform}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              {currentUser.coding_profiles?.[
+                                `${platform}_id`
+                              ] || "Not Connected"}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${
+                              currentUser.coding_profiles?.[
+                                `${platform}_status`
+                              ] === "accepted"
+                                ? "bg-green-100 text-green-700"
+                                : currentUser.coding_profiles?.[
+                                    `${platform}_status`
+                                  ] === "pending"
+                                ? "bg-yellow-100 text-yellow-700"
+                                : "bg-gray-100 text-gray-600"
+                            }`}
+                          >
+                            {currentUser.coding_profiles?.[
+                              `${platform}_status`
+                            ] || "No Data"}
                           </span>
-                          {status === "accepted" && (
-                            <FiCheck className="inline ml-1 -mt-3 text-green-500" />
-                          )}
-                          {status === "rejected" && (
-                            <FiX className="inline ml-1 -mt-3 text-red-500" />
-                          )}
-                          {status === "pending" && (
-                            <FiClock className="inline ml-1 -mt-3 text-gray-500" />
-                          )}
-                          {status === "suspended" && (
-                            <FiPause className="inline ml-1 -mt-3 text-yellow-500" />
-                          )}
-                        </p>
+                        </div>
                       </div>
-                    );
-                  }
-                )}
+                    ))}
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-
-          {/* Main Section */}
-          <div className="w-full rounded-xl">
-            <div className="md:flex justify-between items-center">
-              <div className="flex flex-wrap  gap-1">
-                <span className="px-4 py-2 bg-white rounded-xl shadow-sm">
-                  Campus:{" "}
-                  <span className="font-semibold">{currentUser.college}</span>
-                </span>
-                <span className="px-4 py-2 bg-white rounded-xl shadow-sm">
-                  Degree:{" "}
-                  <span className="font-semibold">{currentUser.degree}</span>
-                </span>
-
-                <span className="px-4 py-2 bg-white rounded-xl shadow-sm">
-                  Department:{" "}
-                  <span className="font-semibold">{currentUser.dept_name}</span>
-                </span>
-                <span className="px-4 py-2 bg-white rounded-xl shadow-sm">
-                  Year:{" "}
-                  <span className="font-semibold">{currentUser.year}</span>
-                </span>
-                <span className="px-4 py-2 bg-white rounded-xl shadow-sm">
-                  Section:{" "}
-                  <span className="font-semibold">{currentUser.section}</span>
-                </span>
-              </div>
-              <button
-                onClick={handleRefresh}
-                className="px-4 py-2 bg-white rounded-xl shadow-sm flex items-center gap-3 cursor-pointer mt-2 mb-2 md:mt-0 md:mb-0"
-                disabled={refreshing}
-              >
-                <FiRefreshCw className={refreshing ? "animate-spin" : ""} />
-                {refreshing ? "Refreshing..." : "Refresh"}
-              </button>
-            </div>
-            {/* Stats Cards */}
-            <div className="grid grid-cols-2 mb-4 xl:grid-cols-4 gap-3 md:border-0 border border-gray-200 p-4 rounded-xl ">
-              <StatsCard
-                icon={<FiCode />}
-                title="Problems"
-                value={currentUser?.performance?.combined?.totalSolved || 0}
-                color="blue"
-              />
-              <StatsCard
-                icon={<FiCode />}
-                title="Contests"
-                value={totalContests}
-                color="success"
-              />
-              <StatsCard
-                icon={<FiCode />}
-                title="Stars"
-                value={totalStars}
-                color="warning"
-              />
-              <StatsCard
-                icon={<FiCode />}
-                title="Badges"
-                value={totalBadges}
-                color="error"
-              />
-            </div>
-
-            {/* Platform-wise Stats - Only show accepted platforms */}
-            <div className="grid grid-cols-2 gap-2 md:gap-6 ">
-              {currentUser.coding_profiles?.leetcode_status === "accepted" && (
-                <PlatformCard
-                  name="LeetCode"
-                  color=" hover:text-yellow-600 hover:shadow-yellow-600"
-                  icon="/LeetCode_logo.png"
-                  ani="fade-up"
-                  total={
-                    currentUser.performance.platformWise.leetcode.easy +
-                    currentUser.performance.platformWise.leetcode.medium +
-                    currentUser.performance.platformWise.leetcode.hard
-                  }
-                  breakdown={{
-                    Easy: currentUser.performance.platformWise.leetcode.easy,
-                    Medium:
-                      currentUser.performance.platformWise.leetcode.medium,
-                    Hard: currentUser.performance.platformWise.leetcode.hard,
-                    contests:
-                      currentUser.performance.platformWise.leetcode.contests,
-                    Badges:
-                      currentUser.performance.platformWise.leetcode.badges,
-                  }}
-                />
-              )}
-              {currentUser.coding_profiles?.codechef_status === "accepted" && (
-                <PlatformCard
-                  name="CodeChef"
-                  color=" hover:text-orange-900 hover:shadow-orange-900"
-                  icon="/codechef_logo.png"
-                  ani="fade-up"
-                  total={currentUser.performance.platformWise.codechef.contests}
-                  subtitle="Contests Participated"
-                  breakdown={{
-                    "Problems Solved":
-                      currentUser.performance.platformWise.codechef.problems,
-                    Star: currentUser.performance.platformWise.codechef.stars,
-                    Badges:
-                      currentUser.performance.platformWise.codechef.badges,
-                  }}
-                />
-              )}
-              {currentUser.coding_profiles?.geeksforgeeks_status ===
-                "accepted" && (
-                <PlatformCard
-                  name="GeeksforGeeks"
-                  color=" hover:text-green-800 hover:shadow-green-800"
-                  icon="/GeeksForGeeks_logo.png"
-                  ani="fade-down"
-                  total={
-                    currentUser.performance.platformWise.gfg.school +
-                    currentUser.performance.platformWise.gfg.basic +
-                    currentUser.performance.platformWise.gfg.easy +
-                    currentUser.performance.platformWise.gfg.medium +
-                    currentUser.performance.platformWise.gfg.hard
-                  }
-                  breakdown={{
-                    School: currentUser.performance.platformWise.gfg.school,
-                    Basic: currentUser.performance.platformWise.gfg.basic,
-                    Easy: currentUser.performance.platformWise.gfg.easy,
-                    Medium: currentUser.performance.platformWise.gfg.medium,
-                    Hard: currentUser.performance.platformWise.gfg.hard,
-                  }}
-                />
-              )}
-              {currentUser.coding_profiles?.hackerrank_status ===
-                "accepted" && (
-                <PlatformCard
-                  name="HackerRank"
-                  color=" hover:text-gray-900 hover:shadow-gray-900"
-                  icon="/HackerRank_logo.png"
-                  ani="fade-down"
-                  total={currentUser.performance.platformWise.hackerrank.badges}
-                  subtitle="Stars Gained"
-                  breakdown={{
-                    Badges: (
-                      currentUser.performance.platformWise.hackerrank
-                        .badgesList || []
-                    )
-                      .map((badge) => `${badge.name}: ${badge.stars}★`)
-                      .join(", "),
-                  }}
-                />
-              )}
-              {currentUser.coding_profiles?.github_id && (
-                <PlatformCard
-                  name="GitHub"
-                  color=" hover:text-black hover:shadow-black"
-                  icon="https://cdn-icons-png.flaticon.com/512/25/25231.png"
-                  ani="fade-up"
-                  total={currentUser.performance.platformWise.github.repos}
-                  subtitle="Public Repositories"
-                  breakdown={{
-                    "Total Contributions":
-                      currentUser.performance.platformWise.github.contributions,
-                  }}
-                />
-              )}
-            </div>
-          </div>
+            )}
+          </main>
         </div>
+        <Footer />
       </div>
-      <Footer />
     </>
   );
 };
