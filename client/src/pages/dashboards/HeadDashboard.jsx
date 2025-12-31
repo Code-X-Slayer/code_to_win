@@ -40,7 +40,6 @@ const LifecycleManagement = lazy(() =>
 // Student Management Tab Component
 function StudentManagementTab({
   years,
-  sections,
   filterYear,
   setFilterYear,
   filterSection,
@@ -50,7 +49,37 @@ function StudentManagementTab({
   filteredStudents,
   setSelectedStudent,
   currentUser,
+  onRefresh,
 }) {
+  const [sectionsList, setSectionsList] = useState([]);
+  const [loadingSections, setLoadingSections] = useState(false);
+
+  useEffect(() => {
+    if (filterYear && currentUser.dept_code) {
+      const fetchSections = async () => {
+        setLoadingSections(true);
+        try {
+          const res = await axios.get(
+            `/api/meta/sections?dept=${currentUser.dept_code}&year=${filterYear}`
+          );
+          setSectionsList(res.data);
+        } catch (err) {
+          console.error("Failed to fetch sections", err);
+        } finally {
+          setLoadingSections(false);
+        }
+      };
+      fetchSections();
+    } else {
+      setSectionsList([]);
+    }
+  }, [filterYear, currentUser.dept_code]);
+
+  const handleYearChange = (val) => {
+    setFilterYear(val);
+    setFilterSection(""); // Clear section when year changes
+  };
+
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
@@ -85,7 +114,7 @@ function StudentManagementTab({
             <select
               className="border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
               value={filterYear}
-              onChange={(e) => setFilterYear(e.target.value)}
+              onChange={(e) => handleYearChange(e.target.value)}
             >
               <option value="">All Years</option>
               {years.map((year) => (
@@ -100,14 +129,17 @@ function StudentManagementTab({
               Section
             </label>
             <select
-              className="border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+              className="border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 text-sm focus:ring-2 focus:ring-blue-500 outline-none disabled:bg-gray-100"
               value={filterSection}
               onChange={(e) => setFilterSection(e.target.value)}
+              disabled={loadingSections || !filterYear}
             >
-              <option value="">All Sections</option>
-              {sections.map((s) => (
+              <option value="">
+                {loadingSections ? "Loading..." : "All Sections"}
+              </option>
+              {sectionsList.map((s) => (
                 <option key={s} value={s}>
-                  {s}
+                  Section {s}
                 </option>
               ))}
             </select>
@@ -134,6 +166,8 @@ function StudentManagementTab({
             showSection={true}
             rankLabel="Rank"
             onProfileClick={setSelectedStudent}
+            canEdit={true}
+            onRefresh={onRefresh}
           />
         </div>
       </Suspense>
@@ -142,19 +176,20 @@ function StudentManagementTab({
 }
 
 // Faculty Management Tab Component
-function FacultyManagementTab({
-  years,
-  sections,
-  facultyList,
-  refreshFacultyList,
-}) {
+function FacultyManagementTab({ years, facultyList, refreshFacultyList }) {
+  const { currentUser } = useAuth();
   const [selectedFaculty, setSelectedFaculty] = useState("");
-  const [assignments, setAssignments] = useState([{ year: "", section: "" }]);
+  const [assignments, setAssignments] = useState([
+    { year: "", section: "", availableSections: [], loadingSections: false },
+  ]);
   const [message, setMessage] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const handleAddAssignment = () => {
-    setAssignments([...assignments, { year: "", section: "" }]);
+    setAssignments([
+      ...assignments,
+      { year: "", section: "", availableSections: [], loadingSections: false },
+    ]);
   };
 
   const handleRemoveAssignment = (index) => {
@@ -163,10 +198,36 @@ function FacultyManagementTab({
     }
   };
 
-  const handleAssignmentChange = (index, field, value) => {
+  const handleAssignmentChange = async (index, field, value) => {
     const newAssignments = [...assignments];
     newAssignments[index][field] = value;
-    setAssignments(newAssignments);
+
+    if (field === "year") {
+      newAssignments[index].section = "";
+      if (value) {
+        newAssignments[index].loadingSections = true;
+        setAssignments(newAssignments);
+        try {
+          const res = await axios.get(
+            `/api/meta/sections?dept=${currentUser.dept_code}&year=${value}`
+          );
+          const updatedAssignments = [...newAssignments];
+          updatedAssignments[index].availableSections = res.data;
+          updatedAssignments[index].loadingSections = false;
+          setAssignments(updatedAssignments);
+        } catch (err) {
+          console.error("Failed to fetch sections", err);
+          const updatedAssignments = [...newAssignments];
+          updatedAssignments[index].loadingSections = false;
+          setAssignments(updatedAssignments);
+        }
+      } else {
+        newAssignments[index].availableSections = [];
+        setAssignments(newAssignments);
+      }
+    } else {
+      setAssignments(newAssignments);
+    }
   };
 
   const handleAssign = async (e) => {
@@ -219,7 +280,14 @@ function FacultyManagementTab({
 
       setTimeout(() => {
         setSelectedFaculty("");
-        setAssignments([{ year: "", section: "" }]);
+        setAssignments([
+          {
+            year: "",
+            section: "",
+            availableSections: [],
+            loadingSections: false,
+          },
+        ]);
       }, 1500);
     } catch (err) {
       setMessage({
@@ -336,16 +404,19 @@ function FacultyManagementTab({
                       ))}
                     </select>
                     <select
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none disabled:bg-gray-100"
                       value={assignment.section}
                       onChange={(e) =>
                         handleAssignmentChange(index, "section", e.target.value)
                       }
+                      disabled={assignment.loadingSections || !assignment.year}
                     >
-                      <option value="">Section</option>
-                      {sections.map((s) => (
+                      <option value="">
+                        {assignment.loadingSections ? "Loading..." : "Section"}
+                      </option>
+                      {assignment.availableSections.map((s) => (
                         <option key={s} value={s}>
-                          {s}
+                          Section {s}
                         </option>
                       ))}
                     </select>
@@ -492,21 +563,22 @@ function HeadDashboard() {
     }
   };
 
+  const fetchStudents = async () => {
+    try {
+      const { data } = await axios.get("/api/hod/students", {
+        params: {
+          dept: currentUser.dept_code,
+          year: filterYear || "",
+          section: filterSection || "",
+        },
+      });
+      setStudents(data);
+    } catch (error) {
+      console.error("Error fetching students:", error);
+    }
+  };
+
   useEffect(() => {
-    const fetchStudents = async () => {
-      try {
-        const { data } = await axios.get("/api/hod/students", {
-          params: {
-            dept: currentUser.dept_code,
-            year: filterYear || "",
-            section: filterSection || "",
-          },
-        });
-        setStudents(data);
-      } catch (error) {
-        console.error("Error fetching students:", error);
-      }
-    };
     fetchStudents();
     if (currentUser.dept_code) {
       fetchFaculty();
@@ -627,7 +699,6 @@ function HeadDashboard() {
             {selectedTab === "StudentRanking" && (
               <StudentManagementTab
                 years={years}
-                sections={sections}
                 filterYear={filterYear}
                 setFilterYear={setFilterYear}
                 filterSection={filterSection}
@@ -637,13 +708,13 @@ function HeadDashboard() {
                 filteredStudents={filteredStudents}
                 setSelectedStudent={setSelectedStudent}
                 currentUser={currentUser}
+                onRefresh={fetchStudents}
               />
             )}
 
             {selectedTab === "FacultyManagment" && (
               <FacultyManagementTab
                 years={years}
-                sections={sections}
                 facultyList={facultyList}
                 refreshFacultyList={fetchFaculty}
               />

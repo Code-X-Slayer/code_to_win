@@ -480,4 +480,36 @@ router.post("/toggle-verification", async (req, res) => {
   }
 });
 
+// GET /admin/batch-configs
+router.get("/batch-configs", async (req, res) => {
+  logger.info("Fetching batch configurations");
+  try {
+    const [rows] = await db.query("SELECT * FROM dept_batch_configs");
+    res.json(rows);
+  } catch (err) {
+    logger.error(`Error fetching batch configs: ${err.message}`);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// POST /admin/batch-configs
+router.post("/batch-configs", async (req, res) => {
+  const { dept_code, batch, num_sections } = req.body;
+  logger.info(
+    `Upserting batch config: dept=${dept_code}, batch=${batch}, sections=${num_sections}`
+  );
+  try {
+    await db.query(
+      `INSERT INTO dept_batch_configs (dept_code, batch, num_sections) 
+       VALUES (?, ?, ?) 
+       ON DUPLICATE KEY UPDATE num_sections = VALUES(num_sections)`,
+      [dept_code, batch, num_sections]
+    );
+    res.json({ message: "Configuration updated successfully" });
+  } catch (err) {
+    logger.error(`Error updating batch config: ${err.message}`);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 module.exports = router;

@@ -59,6 +59,9 @@ const AdvancedExport = lazy(() => import("../../components/ui/AdvancedExport"));
 const LifecycleManagement = lazy(() =>
   import("../../components/ui/LifecycleManagement")
 );
+const BatchSectionConfig = lazy(() =>
+  import("../../components/ui/BatchSectionConfig")
+);
 
 const metricToPlatform = {
   stars_hr: "HackerRank",
@@ -200,6 +203,7 @@ function AdminDashboard() {
     { key: "UserManagment", label: "User Management", icon: <FiUserPlus /> },
     { key: "ContactRequests", label: "Contact Requests", icon: <FiMail /> },
     { key: "Lifecycle", label: "Student Lifecycle", icon: <FiTrendingUp /> },
+    { key: "SectionConfig", label: "Section Config", icon: <FiSettings /> },
     { key: "ExportData", label: "Export Data", icon: <FiDownload /> },
   ];
 
@@ -594,6 +598,13 @@ function AdminDashboard() {
             {selectedTab === "Lifecycle" && (
               <Suspense fallback={<LoadingSpinner />}>
                 <LifecycleManagement />
+              </Suspense>
+            )}
+
+            {/* Batch Section Config */}
+            {selectedTab === "SectionConfig" && (
+              <Suspense fallback={<LoadingSpinner />}>
+                <BatchSectionConfig />
               </Suspense>
             )}
 

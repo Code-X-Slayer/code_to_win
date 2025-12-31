@@ -11,6 +11,8 @@ const StudentTable = ({
   showSection = true,
   onProfileClick = () => {},
   adminView = false,
+  canEdit = false, // New prop to show edit button for HODs
+  onRefresh = () => {}, // Callback to refresh data after edit/delete
 }) => {
   const [allStudents, setAllStudents] = useState([]);
   const [filteredStudents, setFilteredStudents] = useState([]);
@@ -22,7 +24,31 @@ const StudentTable = ({
     search: "",
   });
   const [editingStudent, setEditingStudent] = useState(null);
-  const { depts, years, sections } = useMeta();
+  const [sectionsList, setSectionsList] = useState([]);
+  const [loadingSections, setLoadingSections] = useState(false);
+  const { depts, years } = useMeta();
+
+  useEffect(() => {
+    if (adminView && filters.dept && filters.year) {
+      const fetchSections = async () => {
+        setLoadingSections(true);
+        try {
+          const res = await fetch(
+            `/api/meta/sections?dept=${filters.dept}&year=${filters.year}`
+          );
+          const data = await res.json();
+          setSectionsList(data);
+        } catch (err) {
+          console.error("Failed to fetch sections", err);
+        } finally {
+          setLoadingSections(false);
+        }
+      };
+      fetchSections();
+    } else {
+      setSectionsList([]); // Clear sections if dept or year not selected
+    }
+  }, [adminView, filters.dept, filters.year]);
 
   const fetchAllStudents = useCallback(async () => {
     setLoading(true);
@@ -41,8 +67,6 @@ const StudentTable = ({
   useEffect(() => {
     if (adminView) {
       fetchAllStudents();
-    } else {
-      setFilteredStudents(students);
     }
   }, [adminView, fetchAllStudents]);
 
@@ -50,7 +74,7 @@ const StudentTable = ({
     if (!adminView) {
       setFilteredStudents(students);
     }
-  }, [students, adminView]);
+  }, [adminView, students]);
 
   useEffect(() => {
     if (adminView) {
@@ -71,7 +95,14 @@ const StudentTable = ({
   }, [filters, allStudents, adminView]);
 
   const handleFilterChange = (key, value) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
+    setFilters((prev) => {
+      const newFilters = { ...prev, [key]: value };
+      // Clear section if dept or year changes
+      if (key === "dept" || key === "year") {
+        newFilters.section = "";
+      }
+      return newFilters;
+    });
   };
 
   const displayStudents = adminView ? filteredStudents : students;
@@ -83,9 +114,10 @@ const StudentTable = ({
           onClose={() => setEditingStudent(null)}
           onSuccess={() => {
             if (adminView) fetchAllStudents();
+            onRefresh(); // Refresh HOD or other views
             setEditingStudent(null);
           }}
-          adminView={adminView}
+          adminView={adminView || canEdit}
         />
       )}
 
@@ -129,14 +161,18 @@ const StudentTable = ({
             <select
               value={filters.section}
               onChange={(e) => handleFilterChange("section", e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+              className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none disabled:bg-gray-100"
+              disabled={loadingSections || !filters.dept || !filters.year}
             >
-              <option value="">All Sections</option>
-              {sections.map((section) => (
-                <option key={section} value={section}>
-                  {section}
-                </option>
-              ))}
+              <option value="">
+                {loadingSections ? "Loading..." : "All Sections"}
+              </option>
+              {!loadingSections &&
+                sectionsList.map((section) => (
+                  <option key={section} value={section}>
+                    Section {section}
+                  </option>
+                ))}
             </select>
           </div>
           <div className="text-sm text-gray-600">
@@ -170,6 +206,9 @@ const StudentTable = ({
                   Section
                 </th>
               )}
+              <th className="py-3 md:px-4 px-1 sr-only md:not-sr-only">
+                Batch
+              </th>
               <th className="py-3 md:px-4 px-1">Actions</th>
             </tr>
           </thead>
@@ -208,6 +247,9 @@ const StudentTable = ({
                       {s.section}
                     </td>
                   )}
+                  <td className="py-3 md:px-4 px-1 sr-only md:not-sr-only">
+                    {s.batch || "N/A"}
+                  </td>
                   <td className="py-3 md:px-4 px-1">
                     <div className="flex justify-center gap-2">
                       <button
@@ -217,7 +259,7 @@ const StudentTable = ({
                       >
                         <TbUserShare />
                       </button>
-                      {adminView && (
+                      {(adminView || canEdit) && (
                         <button
                           onClick={() => setEditingStudent(s)}
                           className="text-gray-700 px-2 py-1 rounded hover:text-green-700 flex items-center gap-1"

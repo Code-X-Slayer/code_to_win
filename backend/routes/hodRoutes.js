@@ -331,4 +331,145 @@ router.post("/assign-faculty", async (req, res) => {
   }
 });
 
+// POST /hod/update-student
+router.post("/update-student", async (req, res) => {
+  const { userId, name, email, year, section, degree, hodDept } = req.body;
+  logger.info(`HOD updating student: userId=${userId}`);
+
+  const connection = await db.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    // Verify student belongs to HOD's department
+    const [student] = await connection.query(
+      "SELECT dept_code FROM student_profiles WHERE student_id = ?",
+      [userId]
+    );
+
+    if (student.length === 0) {
+      await connection.rollback();
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    if (student[0].dept_code !== hodDept) {
+      await connection.rollback();
+      logger.warn(
+        `Security: HOD (${hodDept}) tried to update student from ${student[0].dept_code}`
+      );
+      return res
+        .status(403)
+        .json({
+          message: "Access denied: Student does not belong to your department",
+        });
+    }
+
+    // Update student_profiles table
+    const profileFields = [];
+    const profileValues = [];
+
+    if (name) {
+      profileFields.push("name = ?");
+      profileValues.push(name);
+    }
+    if (year) {
+      profileFields.push("year = ?");
+      profileValues.push(year);
+    }
+    if (section) {
+      profileFields.push("section = ?");
+      profileValues.push(section);
+    }
+    if (degree) {
+      profileFields.push("degree = ?");
+      profileValues.push(degree);
+    }
+
+    if (profileFields.length > 0) {
+      profileValues.push(userId);
+      await connection.query(
+        `UPDATE student_profiles SET ${profileFields.join(
+          ", "
+        )} WHERE student_id = ?`,
+        profileValues
+      );
+    }
+
+    // Update users table for email
+    if (email) {
+      await connection.query("UPDATE users SET email = ? WHERE user_id = ?", [
+        email,
+        userId,
+      ]);
+    }
+
+    await connection.commit();
+    logger.info(`Student ${userId} updated by HOD`);
+    res.json({ message: "Student updated successfully" });
+  } catch (err) {
+    await connection.rollback();
+    logger.error(`Error updating student for HOD: ${err.message}`);
+    res.status(500).json({ message: "Server error" });
+  } finally {
+    connection.release();
+  }
+});
+
+// DELETE /hod/students/:id
+router.delete("/students/:id", async (req, res) => {
+  const { id } = req.params;
+  const { hodDept } = req.query; // HOD department passed as query param for verification
+  logger.info(`HOD deleting student ${id}`);
+
+  const connection = await db.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    // Verify student belongs to HOD's department
+    const [student] = await connection.query(
+      "SELECT dept_code FROM student_profiles WHERE student_id = ?",
+      [id]
+    );
+
+    if (student.length === 0) {
+      await connection.rollback();
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    if (student[0].dept_code !== hodDept) {
+      await connection.rollback();
+      logger.warn(
+        `Security: HOD (${hodDept}) tried to delete student from ${student[0].dept_code}`
+      );
+      return res.status(403).json({
+        message: "Access denied: Student does not belong to your department",
+      });
+    }
+
+    // Delete sequences
+    await connection.query(
+      "DELETE FROM student_coding_profiles WHERE student_id = ?",
+      [id]
+    );
+    await connection.query(
+      "DELETE FROM student_performance WHERE student_id = ?",
+      [id]
+    );
+    await connection.query(
+      "DELETE FROM student_profiles WHERE student_id = ?",
+      [id]
+    );
+    await connection.query("DELETE FROM users WHERE user_id = ?", [id]);
+
+    await connection.commit();
+    logger.info(`Student ${id} deleted by HOD`);
+    res.json({ message: "Student deleted successfully" });
+  } catch (err) {
+    await connection.rollback();
+    logger.error(`Error deleting student for HOD: ${err.message}`);
+    res.status(500).json({ message: "Server error" });
+  } finally {
+    connection.release();
+  }
+});
+
 module.exports = router;

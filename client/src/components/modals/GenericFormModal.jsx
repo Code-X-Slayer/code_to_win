@@ -54,6 +54,12 @@ export default function GenericFormModal({
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+
+    // Trigger field-specific onChange if provided
+    const field = fields.find((f) => f.name === name);
+    if (field?.onChange) {
+      field.onChange(value, setForm);
+    }
   };
 
   const handleSubmit = (e) => {

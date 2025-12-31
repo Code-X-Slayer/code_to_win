@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, Navigate } from "react-router-dom";
 import { FiUser, FiLock, FiEye, FiEyeOff, FiUserCheck } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
@@ -8,7 +8,9 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
 const Register = () => {
-  const { depts, years, sections } = useMeta();
+  const { depts, years } = useMeta();
+  const [sections, setSections] = useState([]);
+  const [loadingSections, setLoadingSections] = useState(false);
   const [step, setStep] = useState(1);
   const navi = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -30,14 +32,37 @@ const Register = () => {
     codechef: "",
   });
 
+  // Fetch dynamic sections
+  useEffect(() => {
+    if (formData.dept && formData.year) {
+      const fetchSections = async () => {
+        setLoadingSections(true);
+        try {
+          const res = await fetch(
+            `/api/meta/sections?dept=${formData.dept}&year=${formData.year}`
+          );
+          const data = await res.json();
+          setSections(data);
+        } catch (err) {
+          console.error("Failed to fetch sections");
+        }
+        setLoadingSections(false);
+      };
+      fetchSections();
+    }
+  }, [formData.dept, formData.year]);
+
   // Handlers
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
+    const { name, value } = e.target;
+    setFormData((prev) => {
+      const newData = { ...prev, [name]: value };
+      if (name === "dept" || name === "year") {
+        newData.section = "";
+      }
+      return newData;
     });
   };
-
   const handleNext = () => {
     if (step === 1) {
       if (
@@ -182,7 +207,15 @@ const Register = () => {
                           type="text"
                           name="stdId"
                           value={formData.stdId}
-                          onChange={(e) => setFormData({...formData, stdId: e.target.value.trim().replace(/\s+/g, '').toUpperCase()})}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              stdId: e.target.value
+                                .trim()
+                                .replace(/\s+/g, "")
+                                .toUpperCase(),
+                            })
+                          }
                           placeholder="22A91AXXXX"
                           className="w-full border border-gray-200  rounded px-3 py-2 focus:ring-1 focus:outline-0 focus:ring-blue-600"
                         />
@@ -194,7 +227,7 @@ const Register = () => {
                           name="name"
                           value={formData.name}
                           onChange={handleChange}
-                              className="w-full border border-gray-200  rounded px-3 py-2 focus:ring-1 focus:outline-0 focus:ring-blue-600"
+                          className="w-full border border-gray-200  rounded px-3 py-2 focus:ring-1 focus:outline-0 focus:ring-blue-600"
                         />
                       </div>
                       <div className="mb-4 w-full">
@@ -206,7 +239,7 @@ const Register = () => {
                           name="email"
                           value={formData.email}
                           onChange={handleChange}
-                              className="w-full border border-gray-200  rounded px-3 py-2 focus:ring-1 focus:outline-0 focus:ring-blue-600"
+                          className="w-full border border-gray-200  rounded px-3 py-2 focus:ring-1 focus:outline-0 focus:ring-blue-600"
                         />
                       </div>
                       <div className="mb-4 w-full">
@@ -255,17 +288,17 @@ const Register = () => {
                         >
                           <option value="">Select</option>
                           <option value="MCA">MCA</option>
-                              <option value="B.Tech.">B.Tech</option>
+                          <option value="B.Tech.">B.Tech</option>
                         </select>
                       </div>
                       <div className="mb-4 w-full">
                         <label className="block text-gray-500  mb-1">
-                              Department
+                          Department
                         </label>
                         <select
                           name="dept"
                           onChange={handleChange}
-                              className="w-full border border-gray-300  hover:bg-blue-50 p-2 rounded-lg transition outline-none"
+                          className="w-full border border-gray-300  hover:bg-blue-50 p-2 rounded-lg transition outline-none"
                           value={formData.dept}
                         >
                           <option value="">Select</option>
@@ -283,11 +316,11 @@ const Register = () => {
                         <select
                           name="year"
                           onChange={handleChange}
-                              className="w-full border border-gray-300 hover:bg-blue-50 p-2 rounded-lg transition outline-none"
+                          className="w-full border border-gray-300 hover:bg-blue-50 p-2 rounded-lg transition outline-none"
                           value={formData.year}
                         >
                           <option value="">Select</option>
-                          {[1,2,3,4].map((year) => (
+                          {[1, 2, 3, 4].map((year) => (
                             <option key={year} value={year}>
                               {year}
                             </option>
@@ -301,13 +334,18 @@ const Register = () => {
                         <select
                           name="section"
                           onChange={handleChange}
-                              className="w-full border border-gray-300 hover:bg-blue-50 p-2 rounded-lg transition outline-none"
+                          disabled={loadingSections}
+                          className={`w-full border border-gray-300 hover:bg-blue-50 p-2 rounded-lg transition outline-none ${
+                            loadingSections ? "animate-pulse bg-gray-100" : ""
+                          }`}
                           value={formData.section}
                         >
-                          <option value="">Select</option>
+                          <option value="">
+                            {loadingSections ? "Loading..." : "Select"}
+                          </option>
                           {sections.map((s) => (
                             <option key={s} value={s}>
-                              {s}
+                              Section {s}
                             </option>
                           ))}
                         </select>
@@ -328,9 +366,9 @@ const Register = () => {
                           type="text"
                           name="leetcode"
                           value={formData.leetcode}
-                              onChange={handleChange}
-                              placeholder="(eg: Aditya01)"
-                              className="w-full border border-gray-200 rounded px-3 py-2 focus:ring-1 focus:outline-0 focus:ring-blue-600 "
+                          onChange={handleChange}
+                          placeholder="(eg: Aditya01)"
+                          className="w-full border border-gray-200 rounded px-3 py-2 focus:ring-1 focus:outline-0 focus:ring-blue-600 "
                         />
                       </div>
                       <div className="mb-4 w-full">
@@ -341,9 +379,9 @@ const Register = () => {
                           type="text"
                           name="hackerrank"
                           value={formData.hackerrank}
-                              onChange={handleChange}
-                              placeholder="(eg: Aditya02)"
-                              className="w-full border border-gray-200 rounded px-3 py-2 focus:ring-1 focus:outline-0 focus:ring-blue-600"
+                          onChange={handleChange}
+                          placeholder="(eg: Aditya02)"
+                          className="w-full border border-gray-200 rounded px-3 py-2 focus:ring-1 focus:outline-0 focus:ring-blue-600"
                         />
                       </div>
                       <div className="mb-4 w-full">
@@ -354,9 +392,9 @@ const Register = () => {
                           type="text"
                           name="geeksforgeeks"
                           value={formData.geeksforgeeks}
-                              onChange={handleChange}
-                              placeholder="(eg: Aditya03)"
-                              className="w-full border border-gray-200 rounded px-3 py-2 focus:ring-1 focus:outline-0 focus:ring-blue-600"
+                          onChange={handleChange}
+                          placeholder="(eg: Aditya03)"
+                          className="w-full border border-gray-200 rounded px-3 py-2 focus:ring-1 focus:outline-0 focus:ring-blue-600"
                         />
                       </div>
                       <div className="mb-4 w-full">
@@ -367,9 +405,9 @@ const Register = () => {
                           type="text"
                           name="codechef"
                           value={formData.codechef}
-                              onChange={handleChange}
-                              placeholder="(eg: Aditya04)"
-                              className="w-full border border-gray-200 rounded px-3 py-2 focus:ring-1 focus:outline-0 focus:ring-blue-600"
+                          onChange={handleChange}
+                          placeholder="(eg: Aditya04)"
+                          className="w-full border border-gray-200 rounded px-3 py-2 focus:ring-1 focus:outline-0 focus:ring-blue-600"
                         />
                       </div>
                     </>

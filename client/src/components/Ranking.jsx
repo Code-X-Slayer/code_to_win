@@ -43,7 +43,31 @@ const RankingTable = ({ filter }) => {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(50);
-  const { depts, years, sections } = useMeta();
+  const [sectionsList, setSectionsList] = useState([]);
+  const [loadingSections, setLoadingSections] = useState(false);
+  const { depts, years } = useMeta();
+
+  useEffect(() => {
+    if (filters.dept && filters.year) {
+      const fetchSectionsList = async () => {
+        setLoadingSections(true);
+        try {
+          const res = await fetch(
+            `/api/meta/sections?dept=${filters.dept}&year=${filters.year}`
+          );
+          const data = await res.json();
+          setSectionsList(data);
+        } catch (err) {
+          console.error("Failed to fetch sections", err);
+        } finally {
+          setLoadingSections(false);
+        }
+      };
+      fetchSectionsList();
+    } else {
+      setSectionsList([]);
+    }
+  }, [filters.dept, filters.year]);
 
   const fetchRanks = async () => {
     try {
@@ -75,12 +99,19 @@ const RankingTable = ({ filter }) => {
       setFetchingRanks(false);
     }
   };
+
   useEffect(() => {
     fetchRanks();
   }, [JSON.stringify(filters), topX]);
 
   const handleChange = (key, value) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
+    setFilters((prev) => {
+      const newFilters = { ...prev, [key]: value };
+      if (key === "dept" || key === "year") {
+        newFilters.section = "";
+      }
+      return newFilters;
+    });
   };
 
   const updateRankings = async () => {
@@ -313,13 +344,16 @@ const RankingTable = ({ filter }) => {
                   <select
                     id="section"
                     onChange={(e) => handleChange("section", e.target.value)}
-                    className="border border-gray-300 hover:bg-blue-50 p-2 rounded-lg transition outline-none"
+                    className="border border-gray-300 hover:bg-blue-50 p-2 rounded-lg transition outline-none disabled:bg-gray-100"
                     value={filters.section}
+                    disabled={loadingSections || !filters.dept || !filters.year}
                   >
-                    <option value="">All Sections</option>
-                    {sections.map((s) => (
+                    <option value="">
+                      {loadingSections ? "Loading..." : "All Sections"}
+                    </option>
+                    {sectionsList.map((s) => (
                       <option key={s} value={s}>
-                        {s}
+                        Section {s}
                       </option>
                     ))}
                   </select>

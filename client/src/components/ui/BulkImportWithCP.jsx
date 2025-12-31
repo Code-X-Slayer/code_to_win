@@ -23,7 +23,10 @@ const downloadSampleCSV = () => {
 };
 
 const bulkImportWithCP = ({ onSuccess }) => {
-  const { depts, years, sections } = useMeta();
+  const { depts, years } = useMeta();
+  const [sectionsList, setSectionsList] = useState([]);
+  const [loadingSections, setLoadingSections] = useState(false);
+
   const [bulkFormData, setBulkFormData] = useState({
     dept: "",
     year: "",
@@ -38,11 +41,34 @@ const bulkImportWithCP = ({ onSuccess }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [uploadStats, setUploadStats] = useState(null);
 
+  const fetchSections = async (dept, year) => {
+    if (dept && year) {
+      setLoadingSections(true);
+      try {
+        const response = await fetch(
+          `/api/meta/sections?dept=${dept}&year=${year}`
+        );
+        const data = await response.json();
+        setSectionsList(data);
+      } catch (err) {
+        console.error("Failed to fetch sections", err);
+      } finally {
+        setLoadingSections(false);
+      }
+    } else {
+      setSectionsList([]);
+    }
+  };
+
   const handleBulkFormChange = (field, value) => {
-    setBulkFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+    setBulkFormData((prev) => {
+      const newFormData = { ...prev, [field]: value };
+      if (field === "dept" || field === "year") {
+        newFormData.section = "";
+        fetchSections(newFormData.dept, newFormData.year);
+      }
+      return newFormData;
+    });
   };
 
   const handleFileChange = (e) => {
@@ -256,12 +282,17 @@ const bulkImportWithCP = ({ onSuccess }) => {
           <select
             value={bulkFormData.section}
             onChange={(e) => handleBulkFormChange("section", e.target.value)}
-            className="w-full border-blue-50 border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border-blue-50 border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+            disabled={
+              loadingSections || !bulkFormData.dept || !bulkFormData.year
+            }
           >
-            <option value="">Select section</option>
-            {sections.map((section) => (
+            <option value="">
+              {loadingSections ? "Loading sections..." : "Select section"}
+            </option>
+            {sectionsList.map((section) => (
               <option key={section} value={section}>
-                {section}
+                Section {section}
               </option>
             ))}
           </select>

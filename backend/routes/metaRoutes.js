@@ -64,10 +64,30 @@ router.get("/years", async (req, res) => {
   }
 });
 
-// GET /meta/sections
+// GET /meta/sections?dept=CSE&year=1
 router.get("/sections", async (req, res) => {
-  logger.info("Fetching sections");
+  const { dept, year } = req.query;
+  logger.info(`Fetching sections: dept=${dept}, year=${year}`);
   try {
+    if (dept && year) {
+      const currentYear = new Date().getFullYear();
+      const batch = currentYear - (parseInt(year) - 1);
+
+      const [rows] = await db.query(
+        "SELECT num_sections FROM dept_batch_configs WHERE dept_code = ? AND batch = ?",
+        [dept, batch]
+      );
+
+      if (rows.length > 0) {
+        const num = rows[0].num_sections;
+        const sectionList = Array.from({ length: num }, (_, i) =>
+          (i + 1).toString()
+        );
+        return res.json(sectionList);
+      }
+    }
+
+    // Fallback to existing logic or empty if no specific config found
     const [sections] = await db.query(
       "SELECT DISTINCT section FROM faculty_section_assignment ORDER BY section"
     );

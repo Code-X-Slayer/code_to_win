@@ -63,12 +63,12 @@ const sendNewRegistrationMail = async (email, name, userId, password) => {
 // Login a user
 router.post("/login", async (req, res) => {
   const { userId: rawUserId, password, role } = req.body;
-  
+
   // Normalize userId
   const userId = normalizeUserId(rawUserId);
-  
+
   logger.info(`Login attempt: userId=${userId}, role=${role}`);
-  
+
   // Input validation
   if (!userId || !password || !role) {
     logger.warn("Missing userId, password, or role in login");
@@ -76,7 +76,7 @@ router.post("/login", async (req, res) => {
       message: "User Id, password and role are required",
     });
   }
-  
+
   if (!isValidUserId(userId, role)) {
     logger.warn(`Invalid userId format: ${rawUserId}`);
     return res.status(400).json({
@@ -147,12 +147,12 @@ router.post("/register", async (req, res) => {
     geeksforgeeks,
     codechef,
   } = req.body.formData;
-  
+
   // Normalize student ID
   const cleanedStdId = normalizeUserId(rawStdId);
-  
+
   // Validate student ID
-  if (!isValidUserId(cleanedStdId, 'student')) {
+  if (!isValidUserId(cleanedStdId, "student")) {
     logger.warn(`Invalid student ID format: ${rawStdId}`);
     return res.status(400).json({
       message: "Invalid Student ID format",
@@ -177,11 +177,14 @@ router.post("/register", async (req, res) => {
     );
 
     // 2. Insert into student_profiles table
+    const currentYear = new Date().getFullYear();
+    const batch = currentYear - (parseInt(year) - 1);
+
     await connection.query(
       `INSERT INTO student_profiles 
-        (student_id, name,degree, dept_code, year, section, gender)
-        VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [cleanedStdId, name, degree, dept, year, section, gender]
+        (student_id, name,degree, dept_code, year, section, gender, batch)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [cleanedStdId, name, degree, dept, year, section, gender, batch]
     );
     await connection.query(
       `INSERT INTO student_performance 

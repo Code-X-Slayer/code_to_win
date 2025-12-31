@@ -87,11 +87,14 @@ router.post("/add-student", async (req, res) => {
     );
 
     // 2. Insert into student_profiles table
+    const currentYearNum = new Date().getFullYear();
+    const batchYear = currentYearNum - (parseInt(year) - 1);
+
     await connection.query(
       `INSERT INTO student_profiles 
-        (student_id, name, dept_code, year, section, degree)
-        VALUES (?, ?, ?, ?, ?, ?)`,
-      [stdId, name, dept, year, section, degree]
+        (student_id, name, dept_code, year, section, degree, batch)
+        VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [stdId, name, dept, year, section, degree, batchYear]
     );
     await connection.query(
       `INSERT INTO student_performance 
@@ -354,11 +357,13 @@ router.post("/bulk-import-student", upload.single("file"), async (req, res) => {
           });
         }
         // Insert into student_profiles table
+        const currYear = new Date().getFullYear();
+        const bch = currYear - (parseInt(year) - 1);
         await connection.query(
           `INSERT INTO student_profiles 
-           (student_id, name, dept_code, year, section, degree)
-           VALUES (?, ?, ?, ?, ?, ?)`,
-          [stdId, name, dept, year, section, row.Degree]
+           (student_id, name, dept_code, year, section, degree, batch)
+           VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          [stdId, name, dept, year, section, row.Degree, bch]
         );
         await connection.query(
           `INSERT INTO student_performance (student_id) VALUES (?);`,
@@ -579,11 +584,13 @@ router.post("/bulk-import-with-cp", upload.single("file"), async (req, res) => {
           continue;
         }
         // Insert into student_profiles table
+        const cYear = new Date().getFullYear();
+        const btch = cYear - (parseInt(year) - 1);
         await connection.query(
           `INSERT INTO student_profiles 
-           (student_id, name, dept_code, year, section, degree, gender)
-           VALUES (?, ?, ?, ?, ?, ?, ?)`,
-          [stdId, name, dept, year, section, row.Degree, row.Gender]
+           (student_id, name, dept_code, year, section, degree, gender, batch)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          [stdId, name, dept, year, section, row.Degree, row.Gender, btch]
         );
         await connection.query(
           `INSERT INTO student_performance (student_id) VALUES (?);`,
