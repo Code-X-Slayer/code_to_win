@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { GrCodepen } from "react-icons/gr";
 import { Link, NavLink } from "react-router-dom";
 import { FiMenu, FiX, FiLogOut, FiUser } from "react-icons/fi";
@@ -6,7 +6,6 @@ import { useAuth } from "../context/AuthContext";
 import NotificationDropdown from "./ui/NotificationDropdown";
 
 const Navbar = ({ toggleSidebar }) => {
-  // Replace this with your actual authentication logic
   const { logout, currentUser } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -14,6 +13,7 @@ const Navbar = ({ toggleSidebar }) => {
     isActive
       ? "text-blue-600 border-b-2 border-blue-600 pb-1"
       : "text-gray-800 hover:text-blue-600 pb-1";
+
   return (
     <nav
       className={`${
@@ -22,7 +22,7 @@ const Navbar = ({ toggleSidebar }) => {
           : "py-5"
       }`}
     >
-      <div className={`mx-auto px-4 sm:px-6 lg:px-10 xl:px-40`}>
+      <div className="mx-auto px-4 sm:px-6 lg:px-10 xl:px-40">
         <div className="flex justify-between h-16 items-center">
           {/* Logo */}
           <NavLink to={`/${currentUser?.role || ""}`}>
@@ -35,25 +35,19 @@ const Navbar = ({ toggleSidebar }) => {
               </h1>
             </div>
           </NavLink>
+
           {/* Desktop Menu */}
           {!currentUser ? (
             <div className="hidden md:flex items-center gap-6">
-              <NavLink to="/" className={linkClass}>
-                Home
-              </NavLink>
-              <NavLink to="/checkscore" className={linkClass}>
-                Check Your Strength
-              </NavLink>
-              <NavLink to="/dev" className={linkClass}>
-                Developers
-              </NavLink>
-              <NavLink to="/contact" className={linkClass}>
-                Contact
-              </NavLink>
+              <NavLink to="/" className={linkClass}>Home</NavLink>
+              <NavLink to="/checkscore" className={linkClass}>Check Your Strength</NavLink>
+              <NavLink to="/dev" className={linkClass}>Developers</NavLink>
+              <NavLink to="/contact" className={linkClass}>Contact</NavLink>
             </div>
           ) : (
             <div className="hidden md:flex items-center gap-6">
               <NotificationDropdown />
+
               <div className="flex items-center gap-2 font-medium p-2">
                 <FiUser />
                 {currentUser?.name}
@@ -61,63 +55,50 @@ const Navbar = ({ toggleSidebar }) => {
                   ({currentUser?.role})
                 </span>
               </div>
-              {currentUser?.role === "student" && (
-                <div
-                  onClick={logout}
-                  className="flex items-center gap-2 on hover:text-blue-800 p-2 cursor-pointer"
-                >
-                  <FiLogOut />
-                  Logout
-                </div>
-              )}
+
+              {/*  TOP LOGOUT — NOW FOR ALL ROLES */}
+              <div
+                onClick={logout}
+                className="flex items-center gap-2 hover:text-blue-800 p-2 cursor-pointer"
+              >
+                <FiLogOut />
+                Logout
+              </div>
             </div>
           )}
-          {/* Mobile Hamburger */}
+
+          {/* Mobile */}
           <div className="md:hidden flex items-center gap-2">
             {!currentUser ? (
               <button
                 onClick={() => setMobileMenuOpen((prev) => !prev)}
-                className="text-2xl text-gray-700 focus:outline-none "
+                className="text-2xl text-gray-700"
               >
                 {mobileMenuOpen ? <FiX /> : <FiMenu />}
               </button>
             ) : (
               <>
                 <NotificationDropdown />
-                {currentUser?.role === "student" ? (
-                  <div
-                    onClick={logout}
-                    className="flex items-center gap-2 on hover:text-blue-800 p-2 cursor-pointer"
-                  >
-                    <FiLogOut />
-                  </div>
-                ) : (
-                  <button
-                    onClick={toggleSidebar}
-                    className="p-2 text-xl text-gray-700 hover:text-blue-800 focus:outline-none"
-                  >
-                    <FiMenu />
-                  </button>
-                )}
+
+                {/*  Mobile Top Logout for ALL */}
+                <div
+                  onClick={logout}
+                  className="flex items-center gap-2 p-2 cursor-pointer"
+                >
+                  <FiLogOut />
+                </div>
               </>
             )}
           </div>
         </div>
+
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden flex flex-col  gap-2 py-2 ">
-            <Link to="/" onClick={() => setMobileMenuOpen(false)}>
-              Home
-            </Link>
-            <Link to="/checkscore" onClick={() => setMobileMenuOpen(false)}>
-              Check Your Strength
-            </Link>
-            <Link to="/dev" onClick={() => setMobileMenuOpen(false)}>
-              Developers
-            </Link>
-            <Link to="/contact" onClick={() => setMobileMenuOpen(false)}>
-              Contact
-            </Link>
+          <div className="md:hidden flex flex-col gap-2 py-2">
+            <Link to="/" onClick={() => setMobileMenuOpen(false)}>Home</Link>
+            <Link to="/checkscore" onClick={() => setMobileMenuOpen(false)}>Check Your Strength</Link>
+            <Link to="/dev" onClick={() => setMobileMenuOpen(false)}>Developers</Link>
+            <Link to="/contact" onClick={() => setMobileMenuOpen(false)}>Contact</Link>
           </div>
         )}
       </div>
