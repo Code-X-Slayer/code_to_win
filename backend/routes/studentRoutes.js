@@ -127,20 +127,37 @@ router.get("/profile", async (req, res) => {
 });
 
 router.put("/update-profile", async (req, res) => {
-  const { userId, name, email } = req.body;
+  const { userId, name, email, section } = req.body;
   logger.info(`Updating student profile: userId=${userId}`);
   try {
-    if (!name && !email) {
+    if (!name && !email && !section) {
       return res.status(400).json({ message: "No fields to update" });
     }
 
+    // Build update query dynamically based on provided fields
+    const updates = [];
+    const values = [];
+
     if (name) {
+      updates.push("name = ?");
+      values.push(name);
+    }
+
+    if (section !== undefined && section !== null) {
+      updates.push("section = ?");
+      values.push(section);
+    }
+
+    // Update student_profiles table if there are any updates
+    if (updates.length > 0) {
+      values.push(userId);
       await db.query(
-        `UPDATE student_profiles SET name = ? WHERE student_id = ?`,
-        [name, userId]
+        `UPDATE student_profiles SET ${updates.join(", ")} WHERE student_id = ?`,
+        values
       );
     }
 
+    // Update users table for email
     if (email) {
       await db.query(`UPDATE users SET email = ? WHERE user_id = ?`, [
         email,

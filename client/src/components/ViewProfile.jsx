@@ -151,14 +151,12 @@ const ViewProfile = ({ student, onClose }) => {
               color=" hover:text-black hover:shadow-black"
               total={student?.performance?.platformWise?.hackerrank?.badges}
               subtitle="Badges Gained"
-              breakdown={{
-                Badges: (
-                  student?.performance?.platformWise?.hackerrank?.badgesList ||
-                  []
-                )
-                  .map((badge) => `${badge.name}: ${badge.stars}★`)
-                  .join(", "),
-              }}
+              breakdown={(
+                student?.performance?.platformWise?.hackerrank?.badgesList || []
+              ).reduce((acc, badge) => {
+                acc[badge.name] = `★${badge.stars}`;
+                return acc;
+              }, {})}
             />
             {student?.performance?.platformWise?.github?.repos > 0 && (
               <PlatformCard

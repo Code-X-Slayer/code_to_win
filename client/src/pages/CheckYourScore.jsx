@@ -235,12 +235,12 @@ export default function CheckYourScore() {
                   name="HackerRank"
                   color="hover:text-green-600 hover:shadow-green-600"
                   icon="/HackerRank_logo.png"
-                  total={result.data.hackerrank?.Total_stars || 0}
-                  breakdown={{
-                    "Badges": (result.data.hackerrank.Badges || [])
-                      .map(b => `${b.name}: ${b.stars}★`)
-                      .join(", "),
-                  }} subtitle="Badges Gained"
+                  total={result.data.hackerrank?.Badges?.length || 0}
+                  subtitle="Badges Gained"
+                  breakdown={(result.data.hackerrank.Badges || []).reduce((acc, badge) => {
+                    acc[badge.name] = `★${badge.stars}`;
+                    return acc;
+                  }, {})}
                 />
               )}
               {result.data?.codechef && (

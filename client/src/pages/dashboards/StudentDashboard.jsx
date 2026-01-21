@@ -403,15 +403,14 @@ const StudentDashboard = () => {
                       total={
                         currentUser.performance.platformWise.hackerrank.badges
                       }
-                      subtitle="Stars Gained"
-                      breakdown={{
-                        Badges: (
-                          currentUser.performance.platformWise.hackerrank
-                            .badgesList || []
-                        )
-                          .map((badge) => `${badge.name}: ${badge.stars}★`)
-                          .join(", "),
-                      }}
+                      subtitle="Badges Gained"
+                      breakdown={(
+                        currentUser.performance.platformWise.hackerrank
+                          .badgesList || []
+                      ).reduce((acc, badge) => {
+                        acc[badge.name] = `★${badge.stars}`;
+                        return acc;
+                      }, {})}
                     />
                   )}
                   {currentUser.coding_profiles?.github_id && (
