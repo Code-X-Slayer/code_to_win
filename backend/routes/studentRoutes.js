@@ -130,7 +130,7 @@ router.put("/update-profile", async (req, res) => {
   const { userId, name, email, section } = req.body;
   logger.info(`Updating student profile: userId=${userId}`);
   try {
-    if (!name && !email && !section) {
+    if (!name && !email && (section === undefined || section === null)) {
       return res.status(400).json({ message: "No fields to update" });
     }
 

@@ -62,33 +62,37 @@ export default function EditModal({
 
   useEffect(() => {
     setForm(savedData);
+    // Fetch sections for students when modal opens
+    if (!isManager && savedData.dept_code && savedData.year) {
+      fetchSections(savedData.dept_code, savedData.year);
+    }
   }, [user]);
 
-  useEffect(() => {
-    if (form.dept_code && form.year) {
-      const fetchSectionsList = async () => {
-        setLoadingSections(true);
-        try {
-          const res = await fetch(
-            `/api/meta/sections?dept=${form.dept_code}&year=${form.year}`
-          );
-          const data = await res.json();
-          setSectionsList(data);
-          // If current section is not in new list, clear it (optional, but safer)
-          if (data.length > 0 && !data.includes(form.section?.toString())) {
-            // setForm(prev => ({ ...prev, section: "" }));
-          }
-        } catch (err) {
-          console.error("Failed to fetch sections", err);
-        } finally {
-          setLoadingSections(false);
-        }
-      };
-      fetchSectionsList();
-    } else {
+  const fetchSections = async (deptCode, year) => {
+    if (!deptCode || !year) {
       setSectionsList([]);
+      return;
     }
-  }, [form.dept_code, form.year]);
+    setLoadingSections(true);
+    try {
+      const res = await fetch(
+        `/api/meta/sections?dept=${deptCode}&year=${year}`
+      );
+      const data = await res.json();
+      setSectionsList(data);
+    } catch (err) {
+      console.error("Failed to fetch sections", err);
+      setSectionsList([]);
+    } finally {
+      setLoadingSections(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isManager && form.dept_code && form.year) {
+      fetchSections(form.dept_code, form.year);
+    }
+  }, [form.dept_code, form.year, isManager]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

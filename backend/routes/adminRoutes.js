@@ -655,4 +655,189 @@ router.delete("/admins/:id", async (req, res) => {
   }
 });
 
+// POST /admin/placement-eligibility - Filter students for placement eligibility
+router.post("/placement-eligibility", async (req, res) => {
+  const {
+    companyName,
+    branches,
+    years,
+    leetcodeMin,
+    geeksforgeeksMin,
+    hackerrankMin,
+    codechefMin,
+    githubMin,
+  } = req.body;
+
+  logger.info(
+    `Placement eligibility filter requested for company: ${companyName}`
+  );
+
+  try {
+    // Validate required fields
+    if (!companyName || !branches || !years || branches.length === 0 || years.length === 0) {
+      return res.status(400).json({
+        message: "Company name, branches, and years are required",
+      });
+    }
+
+    // Build the SQL query
+    let query = `
+      SELECT 
+        sp.student_id,
+        sp.name,
+        sp.dept_code,
+        d.dept_name,
+        sp.year,
+        sp.section,
+        u.email,
+        perf.easy_lc,
+        perf.medium_lc,
+        perf.hard_lc,
+        perf.school_gfg,
+        perf.basic_gfg,
+        perf.easy_gfg,
+        perf.medium_gfg,
+        perf.hard_gfg,
+        perf.problems_cc,
+        perf.stars_hr,
+        perf.repos_gh,
+        perf.contributions_gh,
+        scp.leetcode_id,
+        scp.codechef_id,
+        scp.geeksforgeeks_id,
+        scp.hackerrank_id,
+        scp.github_id,
+        scp.leetcode_status,
+        scp.codechef_status,
+        scp.geeksforgeeks_status,
+        scp.hackerrank_status,
+        scp.github_status
+      FROM student_profiles sp
+      JOIN users u ON sp.student_id = u.user_id
+      JOIN dept d ON sp.dept_code = d.dept_code
+      LEFT JOIN student_performance perf ON sp.student_id = perf.student_id
+      LEFT JOIN student_coding_profiles scp ON sp.student_id = scp.student_id
+      WHERE sp.status = 'active'
+        AND sp.dept_code IN (?)
+        AND sp.year IN (?)
+    `;
+
+    const queryParams = [branches, years];
+
+    // Execute query
+    const [students] = await db.query(query, queryParams);
+
+    // Filter students based on platform scores
+    const eligibleStudents = students.filter((student) => {
+      // Calculate total scores for each platform
+      const leetcodeTotal =
+        student.leetcode_status === "accepted"
+          ? (student.easy_lc || 0) +
+            (student.medium_lc || 0) +
+            (student.hard_lc || 0)
+          : 0;
+
+      const geeksforgeeksTotal =
+        student.geeksforgeeks_status === "accepted"
+          ? (student.school_gfg || 0) +
+            (student.basic_gfg || 0) +
+            (student.easy_gfg || 0) +
+            (student.medium_gfg || 0) +
+            (student.hard_gfg || 0)
+          : 0;
+
+      const codechefTotal =
+        student.codechef_status === "accepted" ? student.problems_cc || 0 : 0;
+
+      const hackerrankTotal =
+        student.hackerrank_status === "accepted" ? student.stars_hr || 0 : 0;
+
+      const githubTotal =
+        student.github_status === "accepted"
+          ? (student.repos_gh || 0) + (student.contributions_gh || 0)
+          : 0;
+
+      // Check if student meets all criteria
+      const meetsLeetcode =
+        leetcodeMin === undefined || leetcodeTotal >= leetcodeMin;
+      const meetsGeeksforgeeks =
+        geeksforgeeksMin === undefined ||
+        geeksforgeeksTotal >= geeksforgeeksMin;
+      const meetsCodechef =
+        codechefMin === undefined || codechefTotal >= codechefMin;
+      const meetsHackerrank =
+        hackerrankMin === undefined || hackerrankTotal >= hackerrankMin;
+      const meetsGithub = githubMin === undefined || githubTotal >= githubMin;
+
+      return (
+        meetsLeetcode &&
+        meetsGeeksforgeeks &&
+        meetsCodechef &&
+        meetsHackerrank &&
+        meetsGithub
+      );
+    });
+
+    // Format the response with calculated scores
+    const formattedStudents = eligibleStudents.map((student) => ({
+      student_id: student.student_id,
+      name: student.name,
+      email: student.email,
+      dept_code: student.dept_code,
+      dept_name: student.dept_name,
+      year: student.year,
+      section: student.section,
+      leetcode_id: student.leetcode_id,
+      leetcode_score:
+        student.leetcode_status === "accepted"
+          ? (student.easy_lc || 0) +
+            (student.medium_lc || 0) +
+            (student.hard_lc || 0)
+          : 0,
+      geeksforgeeks_id: student.geeksforgeeks_id,
+      geeksforgeeks_score:
+        student.geeksforgeeks_status === "accepted"
+          ? (student.school_gfg || 0) +
+            (student.basic_gfg || 0) +
+            (student.easy_gfg || 0) +
+            (student.medium_gfg || 0) +
+            (student.hard_gfg || 0)
+          : 0,
+      codechef_id: student.codechef_id,
+      codechef_score:
+        student.codechef_status === "accepted" ? student.problems_cc || 0 : 0,
+      hackerrank_id: student.hackerrank_id,
+      hackerrank_score:
+        student.hackerrank_status === "accepted" ? student.stars_hr || 0 : 0,
+      github_id: student.github_id,
+      github_score:
+        student.github_status === "accepted"
+          ? (student.repos_gh || 0) + (student.contributions_gh || 0)
+          : 0,
+    }));
+
+    logger.info(
+      `Found ${formattedStudents.length} eligible students for ${companyName}`
+    );
+
+    res.json({
+      companyName,
+      filters: {
+        branches,
+        years,
+        leetcodeMin,
+        geeksforgeeksMin,
+        codechefMin,
+        hackerrankMin,
+        githubMin,
+      },
+      eligibleStudents: formattedStudents,
+      totalEligible: formattedStudents.length,
+    });
+  } catch (err) {
+    logger.error(`Error filtering placement eligibility: ${err.message}`);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 module.exports = router;

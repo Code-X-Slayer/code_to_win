@@ -16,6 +16,7 @@ import {
   FiBarChart2,
   FiDownload,
   FiFileText,
+  FiBriefcase,
 } from "react-icons/fi";
 import { useMeta } from "../../context/MetaContext";
 import toast from "react-hot-toast";
@@ -69,6 +70,9 @@ const AddAdminModal = lazy(() =>
 );
 const CodingPointsReport = lazy(() =>
   import("../../components/ui/CodingPointsReport")
+);
+const PlacementEligibilityFilter = lazy(() =>
+  import("../../components/ui/PlacementEligibilityFilter")
 );
 
 const metricToPlatform = {
@@ -212,6 +216,7 @@ function AdminDashboard() {
     { key: "Lifecycle", label: "Student Lifecycle", icon: <FiTrendingUp /> },
     { key: "SectionConfig", label: "Section Config", icon: <FiSettings /> },
     { key: "CodingPointsReport", label: "Points Report", icon: <FiFileText /> },
+    { key: "PlacementEligibility", label: "Placement Eligibility Filter", icon: <FiBriefcase /> },
     { key: "ExportData", label: "Export Data", icon: <FiDownload /> },
     ...(currentUser.user_id === "SA07" || currentUser.user_id === "ADMIN"
       ? [{ key: "AdminList", label: "Admin List", icon: <FiUserCheck /> }]
@@ -615,6 +620,13 @@ function AdminDashboard() {
             {selectedTab === "SectionConfig" && (
               <Suspense fallback={<LoadingSpinner />}>
                 <BatchSectionConfig />
+              </Suspense>
+            )}
+
+            {/* Placement Eligibility Filter */}
+            {selectedTab === "PlacementEligibility" && (
+              <Suspense fallback={<LoadingSpinner />}>
+                <PlacementEligibilityFilter />
               </Suspense>
             )}
 
