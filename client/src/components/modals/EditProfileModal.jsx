@@ -135,14 +135,16 @@ export default function EditModal({
     e.preventDefault();
     setStatus({ loading: true, error: null, success: false });
 
-    // Build payload with all relevant fields for managers
+    // Build payload with all relevant fields
     const payload = { userId: user.student_id };
     if (form.name !== savedData.name) payload.name = form.name;
     if (form.email !== savedData.email) payload.email = form.email;
+    
+    // Students can now update their section
+    if (form.section != savedData.section) payload.section = form.section;
 
     if (isManager) {
       if (form.year != savedData.year) payload.year = form.year;
-      if (form.section != savedData.section) payload.section = form.section;
       if (form.degree !== savedData.degree) payload.degree = form.degree;
       if (
         currentUser.role === "admin" &&
@@ -277,6 +279,31 @@ export default function EditModal({
               placeholder="Enter email"
             />
           </div>
+
+          {/* Section field - available for all users */}
+          {!isManager && (
+            <div className="space-y-1">
+              <label className="text-sm font-semibold text-gray-600">
+                Section
+              </label>
+              <select
+                name="section"
+                value={form.section}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all bg-gray-50/50 hover:bg-white disabled:bg-gray-100 disabled:cursor-not-allowed"
+                disabled={loadingSections || !form.dept_code || !form.year}
+              >
+                <option value="">
+                  {loadingSections ? "Loading..." : "Select Section"}
+                </option>
+                {sectionsList.map((s) => (
+                  <option key={s} value={s}>
+                    Section {s}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {isManager && (
             <div className="grid grid-cols-2 gap-4">
