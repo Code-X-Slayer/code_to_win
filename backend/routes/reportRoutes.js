@@ -89,7 +89,10 @@ router.get("/coding-points", async (req, res) => {
             stars: isCodechefAccepted ? p.stars_cc : 0,
           },
           hackerrank: {
-            badges: isHackerrankAccepted ? p.stars_hr : 0,
+            badges: isHackerrankAccepted 
+              ? (p.badges_hr || JSON.parse(p.badgesList_hr || "[]").length)
+              : 0,
+            totalStars: isHackerrankAccepted ? p.stars_hr : 0,
             badgesList: isHackerrankAccepted
               ? JSON.parse(p.badgesList_hr || "[]")
               : [],

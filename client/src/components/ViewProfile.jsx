@@ -149,12 +149,13 @@ const ViewProfile = ({ student, onClose }) => {
               name="HackerRank"
               icon="/HackerRank_logo.png"
               color=" hover:text-black hover:shadow-black"
-              total={student?.performance?.platformWise?.hackerrank?.badges}
-              subtitle="Badges Gained"
+              total={student?.performance?.platformWise?.hackerrank?.badges || 0}
+              label="Badges"
+              subtitle={`${student?.performance?.platformWise?.hackerrank?.totalStars || 0} Total Stars`}
               breakdown={(
                 student?.performance?.platformWise?.hackerrank?.badgesList || []
               ).reduce((acc, badge) => {
-                acc[badge.name] = `★${badge.stars}`;
+                acc[badge.name] = `⭐${badge.stars}`;
                 return acc;
               }, {})}
             />

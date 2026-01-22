@@ -242,11 +242,10 @@ const PDFDocument = ({ student }) => {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>HackerRank</Text>
             <Text style={styles.statValue}>{hackerrank.badges || 0}</Text>
-            <Text style={styles.statLabel}>Badges Gained</Text>
+            <Text style={styles.statLabel}>Total Badges ({hackerrank.totalStars || 0} Stars)</Text>
             <Text style={styles.breakdown}>
-              Badges:{" "}
               {(hackerrank.badgesList || [])
-                .map((b) => `${b.name}: ${b.stars}★`)
+                .map((b) => `${b.name}: ⭐${b.stars}`)
                 .join(", ")}
             </Text>
           </View>

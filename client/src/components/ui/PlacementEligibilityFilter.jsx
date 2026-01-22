@@ -349,7 +349,7 @@ const PlacementEligibilityFilter = () => {
               {/* HackerRank */}
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">
-                  HackerRank (Stars)
+                  HackerRank (Badges)
                 </label>
                 <input
                   type="number"

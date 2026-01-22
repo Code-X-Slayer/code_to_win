@@ -52,12 +52,17 @@ async function scrapeHackerRankProfile(url) {
       return {
         Username: extractUsername(url),
         Total_Score: 0,
+        Total_Badges: 0,
+        Total_Stars: 0,
       };
     }
 
     return {
       Badges: badges,
       Certifications: certifications,
+      Total_Badges: badges.length,
+      Total_Stars: totalStars,
+      // Keep for backward compatibility
       Total_stars: totalStars,
     };
   } catch (error) {

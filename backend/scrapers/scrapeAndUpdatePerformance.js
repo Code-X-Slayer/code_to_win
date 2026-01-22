@@ -140,9 +140,10 @@ async function scrapeAndUpdatePerformance(student_id, platform, username) {
         );
         if (performanceData) {
           await db.query(
-            `UPDATE student_performance SET stars_hr = ?, badgesList_hr = ?, last_updated = NOW() WHERE student_id = ?`,
+            `UPDATE student_performance SET stars_hr = ?, badges_hr = ?, badgesList_hr = ?, last_updated = NOW() WHERE student_id = ?`,
             [
               performanceData?.Total_stars || 0,
+              performanceData?.Total_Badges || 0,
               JSON.stringify(performanceData?.Badges || []),
               student_id,
             ]

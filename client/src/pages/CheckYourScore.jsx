@@ -235,10 +235,11 @@ export default function CheckYourScore() {
                   name="HackerRank"
                   color="hover:text-green-600 hover:shadow-green-600"
                   icon="/HackerRank_logo.png"
-                  total={result.data.hackerrank?.Badges?.length || 0}
-                  subtitle="Badges Gained"
+                  total={result.data.hackerrank?.Total_Badges || 0}
+                  label="Badges"
+                  subtitle={`${result.data.hackerrank?.Total_Stars || 0} Total Stars`}
                   breakdown={(result.data.hackerrank.Badges || []).reduce((acc, badge) => {
-                    acc[badge.name] = `★${badge.stars}`;
+                    acc[badge.name] = `⭐${badge.stars}`;
                     return acc;
                   }, {})}
                 />

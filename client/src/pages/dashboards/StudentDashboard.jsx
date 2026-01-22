@@ -401,14 +401,15 @@ const StudentDashboard = () => {
                       icon="/HackerRank_logo.png"
                       ani="fade-down"
                       total={
-                        currentUser.performance.platformWise.hackerrank.badges
+                        currentUser.performance.platformWise.hackerrank.badges || 0
                       }
-                      subtitle="Badges Gained"
+                      label="Badges"
+                      subtitle={`${currentUser.performance.platformWise.hackerrank.totalStars || 0} Total Stars`}
                       breakdown={(
                         currentUser.performance.platformWise.hackerrank
                           .badgesList || []
                       ).reduce((acc, badge) => {
-                        acc[badge.name] = `★${badge.stars}`;
+                        acc[badge.name] = `⭐${badge.stars}`;
                         return acc;
                       }, {})}
                     />

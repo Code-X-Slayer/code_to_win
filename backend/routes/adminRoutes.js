@@ -700,6 +700,7 @@ router.post("/placement-eligibility", async (req, res) => {
         perf.hard_gfg,
         perf.problems_cc,
         perf.stars_hr,
+        perf.badgesList_hr,
         perf.repos_gh,
         perf.contributions_gh,
         scp.leetcode_id,
@@ -750,7 +751,9 @@ router.post("/placement-eligibility", async (req, res) => {
         student.codechef_status === "accepted" ? student.problems_cc || 0 : 0;
 
       const hackerrankTotal =
-        student.hackerrank_status === "accepted" ? student.stars_hr || 0 : 0;
+        student.hackerrank_status === "accepted" 
+          ? JSON.parse(student.badgesList_hr || "[]").length
+          : 0;
 
       const githubTotal =
         student.github_status === "accepted"
@@ -808,7 +811,9 @@ router.post("/placement-eligibility", async (req, res) => {
         student.codechef_status === "accepted" ? student.problems_cc || 0 : 0,
       hackerrank_id: student.hackerrank_id,
       hackerrank_score:
-        student.hackerrank_status === "accepted" ? student.stars_hr || 0 : 0,
+        student.hackerrank_status === "accepted" 
+          ? JSON.parse(student.badgesList_hr || "[]").length
+          : 0,
       github_id: student.github_id,
       github_score:
         student.github_status === "accepted"
