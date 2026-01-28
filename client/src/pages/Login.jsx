@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from "react";
-import { useNavigate, Navigate } from "react-router-dom";
+import { useNavigate, Navigate, Link } from "react-router-dom";
 import { FiUser, FiLock, FiEye, FiEyeOff, FiUserCheck } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
 
@@ -29,7 +29,6 @@ const Login = () => {
     e.preventDefault();
     setErr(null);
     setIsSubmitting(true);
-    // console.log(formData.userId, formData.password, selectedRole);
     try {
       const result = await login(
         formData.userId,
@@ -168,6 +167,21 @@ const Login = () => {
             )}
           </button>
         </form>
+
+        {/* Registration Link for New Users */}
+        {selectedRole === 'student' && (
+          <div className="mt-6 text-center">
+            <p className="text-sm text-gray-600">
+              Don't have an account?{' '}
+              <Link 
+                to="/register" 
+                className="font-medium text-blue-600 hover:text-blue-700 hover:underline"
+              >
+                Register here
+              </Link>
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
