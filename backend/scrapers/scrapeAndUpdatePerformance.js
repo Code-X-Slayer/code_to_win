@@ -21,12 +21,13 @@ async function scrapeAndUpdatePerformance(student_id, platform, username) {
         );
         if (performanceData) {
           await db.query(
-            `UPDATE student_performance SET easy_lc = ?, medium_lc = ?, hard_lc = ?, contests_lc = ?,badges_lc=?, last_updated = NOW() WHERE student_id = ?`,
+            `UPDATE student_performance SET easy_lc = ?, medium_lc = ?, hard_lc = ?, contests_lc = ?, rating_lc = ?, badges_lc = ?, last_updated = NOW() WHERE student_id = ?`,
             [
               performanceData?.Problems?.Easy,
               performanceData?.Problems?.Medium,
               performanceData?.Problems?.Hard,
               performanceData?.Contests_Attended,
+              performanceData?.Rating,
               performanceData?.Badges,
               student_id,
             ]
@@ -61,11 +62,12 @@ async function scrapeAndUpdatePerformance(student_id, platform, username) {
         );
         if (performanceData) {
           await db.query(
-            `UPDATE student_performance SET contests_cc = ?, stars_cc = ?, problems_cc = ?, badges_cc = ?, last_updated = NOW() WHERE student_id = ?`,
+            `UPDATE student_performance SET contests_cc = ?, stars_cc = ?, problems_cc = ?, rating_cc = ?, badges_cc = ?, last_updated = NOW() WHERE student_id = ?`,
             [
               performanceData?.Contests_Participated,
               performanceData?.Star,
               performanceData?.problemsSolved,
+              performanceData?.Rating,
               performanceData?.Badges,
               student_id,
             ]
@@ -142,7 +144,7 @@ async function scrapeAndUpdatePerformance(student_id, platform, username) {
           await db.query(
             `UPDATE student_performance SET stars_hr = ?, badges_hr = ?, badgesList_hr = ?, last_updated = NOW() WHERE student_id = ?`,
             [
-              performanceData?.Total_stars || 0,
+              performanceData?.Total_Stars || 0,
               performanceData?.Total_Badges || 0,
               JSON.stringify(performanceData?.Badges || []),
               student_id,

@@ -127,6 +127,16 @@ const styles = StyleSheet.create({
     marginTop: 6,
     color: "#333",
   },
+  achievementItem: {
+    fontSize: 12,
+    color: "#333",
+    marginBottom: 4,
+  },
+  achievementMeta: {
+    fontSize: 11,
+    color: "#555",
+    marginBottom: 6,
+  },
 });
 
 const PDFDocument = ({ student }) => {
@@ -135,6 +145,13 @@ const PDFDocument = ({ student }) => {
   const codechef = student?.performance?.platformWise?.codechef || {};
   const hackerrank = student?.performance?.platformWise?.hackerrank || {};
   const github = student?.performance?.platformWise?.github || {};
+  const achievements = student?.achievements || [];
+
+  const formatDate = (value) => {
+    if (!value) return "";
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? "" : date.toLocaleDateString();
+  };
 
   return (
     <Document>
@@ -192,7 +209,7 @@ const PDFDocument = ({ student }) => {
             <Text style={styles.statLabel}>Total Contests</Text>
           </View>
           <View style={styles.statBox}>
-            <Text style={styles.statValue}>{student?.score ?? 0}</Text>
+            <Text style={styles.statValue}>{student?.score || 0}</Text>
             <Text style={styles.statLabel}>Grand Total</Text>
           </View>
         </View>
@@ -205,19 +222,20 @@ const PDFDocument = ({ student }) => {
             </Text>
             <Text style={styles.statLabel}>Problems Solved</Text>
             <Text style={styles.breakdown}>
-              Easy: {leet?.easy || 0}, Medium: {leet.medium || 0}, Hard:{" "}
-              {leet.hard || 0}, Contest: {leet.contests || 0}, Badges:{" "}
-              {leet.badges || 0}
+              Easy: {leet.easy || 0}, Medium: {leet.medium || 0}, Hard:{" "}
+              {leet.hard || 0}, Contest: {leet.contests || 0}, Rating:{" "}
+              {leet.rating || 0}, Badges: {leet.badges || 0}
             </Text>
           </View>
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>CodeChef</Text>
-            <Text style={styles.statValue}>{codechef.contests ?? 0}</Text>
-            <Text style={styles.statLabel}>Contests Participated</Text>
+            <Text style={styles.statValue}>{codechef.problems || 0}</Text>
+            <Text style={styles.statLabel}>Problems Solved</Text>
             <Text style={styles.breakdown}>
-              Problems Solved: {codechef.problems || 0}, Star:{" "}
-              {codechef.stars || 0}, Badges: {codechef.badges || 0}
+              Contests: {codechef.contests || 0}, Rating:{" "}
+              {codechef.rating || 0}, Stars: {codechef.stars || 0}, Badges:{" "}
+              {codechef.badges || 0}
             </Text>
           </View>
         </View>
@@ -245,8 +263,8 @@ const PDFDocument = ({ student }) => {
             <Text style={styles.statLabel}>Total Badges ({hackerrank.totalStars || 0} Stars)</Text>
             <Text style={styles.breakdown}>
               {(hackerrank.badgesList || [])
-                .map((b) => `${b.name}: ⭐${b.stars}`)
-                .join(", ")}
+                .map((b) => `${b?.name || "Badge"}: ${b?.stars || 0}⭐`)
+                .join(", ") || "No badges yet"}
             </Text>
           </View>
         </View>
@@ -261,6 +279,27 @@ const PDFDocument = ({ student }) => {
             </Text>
           </View>
         </View>
+
+        {achievements.length > 0 && (
+          <View style={styles.statsCard}>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Achievements</Text>
+              {achievements.map((ach) => (
+                <View key={ach.id}>
+                  <Text style={styles.achievementItem}>
+                    {(ach.type || "Achievement").toUpperCase()}: {ach.title}
+                  </Text>
+                  <Text style={styles.achievementMeta}>
+                    {ach.subtype ? `${ach.subtype} • ` : ""}
+                    {formatDate(ach.date)
+                      ? `${formatDate(ach.date)}`
+                      : ""}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
       </Page>
     </Document>
   );

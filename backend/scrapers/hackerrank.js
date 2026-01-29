@@ -62,8 +62,6 @@ async function scrapeHackerRankProfile(url) {
       Certifications: certifications,
       Total_Badges: badges.length,
       Total_Stars: totalStars,
-      // Keep for backward compatibility
-      Total_stars: totalStars,
     };
   } catch (error) {
     logger.error(

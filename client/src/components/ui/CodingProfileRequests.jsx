@@ -22,7 +22,6 @@ function CodingProfileRequests({ dept, year, section, facultyId }) {
     fetchRequests();
   }, [dept, year, section]);
 
-  console.log(requests);
   // Group requests by student_id
   const grouped = requests.reduce((acc, req) => {
     if (!acc[req.student_id]) acc[req.student_id] = [];

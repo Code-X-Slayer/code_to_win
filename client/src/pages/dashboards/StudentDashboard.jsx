@@ -13,6 +13,7 @@ import {
   FiPlus,
   FiTrash2,
   FiExternalLink,
+  FiTrendingUp,
 } from "react-icons/fi";
 import toast from "react-hot-toast";
 import { useAuth } from "../../context/AuthContext";
@@ -27,6 +28,7 @@ import {
   UserResetPasswordModal,
 } from "../../components/Modals";
 import AchievementModal from "../../components/modals/AchievementModal";
+import SectionLeaderboard from "../../components/SectionLeaderboard";
 import Footer from "../../components/Footer";
 
 const StudentDashboard = () => {
@@ -37,6 +39,8 @@ const StudentDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showAchievementModal, setShowAchievementModal] = useState(false);
   const [achievements, setAchievements] = useState([]);
+  const [selectedAchievement, setSelectedAchievement] = useState(null);
+  const [initialAchievementType, setInitialAchievementType] = useState(null);
   const [selectedTab, setSelectedTab] = useState("Overview");
 
   const { currentUser, checkAuth, logout } = useAuth();
@@ -141,7 +145,7 @@ const StudentDashboard = () => {
     { key: "Overview", label: "Dashboard", icon: <FiHome /> },
     { key: "Profile", label: "My Profile", icon: <FiUser /> },
     { key: "Achievements", label: "Achievements", icon: <FiAward /> },
-    // Future features can be added here
+    { key: "Leaderboard", label: "Leaderboard", icon: <FiTrendingUp /> },
   ];
 
   return (
@@ -171,8 +175,17 @@ const StudentDashboard = () => {
         {showAchievementModal && (
           <AchievementModal
             studentId={currentUser.student_id}
-            onClose={() => setShowAchievementModal(false)}
-            onSuccess={fetchAchievements}
+            existingAchievement={selectedAchievement}
+            initialType={initialAchievementType}
+            onClose={() => {
+              setShowAchievementModal(false);
+              setSelectedAchievement(null);
+              setInitialAchievementType(null);
+            }}
+            onSuccess={() => {
+              fetchAchievements();
+              checkAuth();
+            }}
           />
         )}
 
@@ -340,9 +353,12 @@ const StudentDashboard = () => {
                           currentUser.performance.platformWise.leetcode.medium,
                         Hard: currentUser.performance.platformWise.leetcode
                           .hard,
-                        contests:
+                        Contests:
                           currentUser.performance.platformWise.leetcode
                             .contests,
+                        Rating:
+                          currentUser.performance.platformWise.leetcode
+                            .rating,
                         Badges:
                           currentUser.performance.platformWise.leetcode.badges,
                       }}
@@ -356,14 +372,17 @@ const StudentDashboard = () => {
                       icon="/codechef_logo.png"
                       ani="fade-up"
                       total={
-                        currentUser.performance.platformWise.codechef.contests
+                        currentUser.performance.platformWise.codechef.problems
                       }
-                      subtitle="Contests Participated"
+                      subtitle="Problems Solved"
                       breakdown={{
-                        "Problems Solved":
+                        Contests:
                           currentUser.performance.platformWise.codechef
-                            .problems,
-                        Star: currentUser.performance.platformWise.codechef
+                            .contests,
+                        Rating:
+                          currentUser.performance.platformWise.codechef
+                            .rating,
+                        Stars: currentUser.performance.platformWise.codechef
                           .stars,
                         Badges:
                           currentUser.performance.platformWise.codechef.badges,
@@ -409,7 +428,7 @@ const StudentDashboard = () => {
                         currentUser.performance.platformWise.hackerrank
                           .badgesList || []
                       ).reduce((acc, badge) => {
-                        acc[badge.name] = `⭐${badge.stars}`;
+                        acc[badge.name] = `${badge.stars}⭐`;
                         return acc;
                       }, {})}
                     />
@@ -605,19 +624,25 @@ const StudentDashboard = () => {
             {selectedTab === "Achievements" && (
               <div className="max-w-5xl mx-auto">
                 <div className="flex justify-between items-center mb-6">
-                  <div>
-                    <h2 className="text-2xl font-bold text-gray-900">
-                      My Achievements
-                    </h2>
-                    <p className="text-gray-500">
-                      Manage your certifications, hackathons, and workshops.
-                    </p>
+                  <div className="flex items-center gap-3">
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900">
+                        My Achievements
+                      </h3>
+                      <p className="text-sm text-gray-500 mt-1">
+                        You have {achievements.length} achievement{achievements.length !== 1 ? "s" : ""} (max 2 per category)
+                      </p>
+                    </div>
                   </div>
                   <button
-                    onClick={() => setShowAchievementModal(true)}
+                    onClick={() => {
+                      setSelectedAchievement(null);
+                      setInitialAchievementType(null);
+                      setShowAchievementModal(true);
+                    }}
                     className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/30"
                   >
-                    <FiPlus size={20} /> Add New
+                    <FiPlus size={20} /> Add Achievement
                   </button>
                 </div>
 
@@ -648,27 +673,32 @@ const StudentDashboard = () => {
                         className="bg-white rounded-2xl shadow-sm p-6 relative group hover:shadow-md transition-all border border-transparent hover:border-blue-100"
                       >
                         <div className="flex justify-between items-start mb-4">
-                          <span
-                            className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${
-                              ach.status === "approved"
-                                ? "bg-green-100 text-green-700"
-                                : ach.status === "rejected"
-                                ? "bg-red-100 text-red-700"
-                                : "bg-yellow-100 text-yellow-700"
-                            }`}
-                          >
-                            {ach.status}
+                          <span className="px-3 py-1 rounded-full text-xs font-semibold capitalize bg-blue-50 text-blue-700">
+                            {ach.type}
                           </span>
                           <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <a
-                              href={ach.file_path}
-                              target="_blank"
-                              rel="noopener noreferrer"
+                            {ach.file_path && (
+                              <a
+                                href={ach.file_path}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                title="View Proof"
+                              >
+                                <FiExternalLink size={18} />
+                              </a>
+                            )}
+                            <button
+                              onClick={() => {
+                                setSelectedAchievement(ach);
+                                setInitialAchievementType(ach.type);
+                                setShowAchievementModal(true);
+                              }}
                               className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                              title="View Proof"
+                              title="Replace"
                             >
-                              <FiExternalLink size={18} />
-                            </a>
+                              <FiRefreshCw size={18} />
+                            </button>
                             <button
                               onClick={() => handleDeleteAchievement(ach.id)}
                               className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
@@ -683,8 +713,7 @@ const StudentDashboard = () => {
                           {ach.title}
                         </h3>
                         <p className="text-sm text-gray-500 mb-3">
-                          {ach.org_name} •{" "}
-                          {dayjs(ach.date).format("MMM D, YYYY")}
+                          {dayjs(ach.date).format("MMM D, YYYY")} {ach.subtype ? `• ${ach.subtype}` : ""}
                         </p>
 
                         {ach.description && (
@@ -695,26 +724,18 @@ const StudentDashboard = () => {
 
                         <div className="flex items-center gap-2 mt-auto pt-4 border-t border-gray-50">
                           <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">
-                            {ach.type}
+                            {ach.subtype || "standard"}
                           </span>
-                          {ach.status === "approved" && (
-                            <span className="ml-auto text-sm font-bold text-green-600">
-                              +{ach.points_awarded} Points
-                            </span>
-                          )}
                         </div>
-
-                        {ach.status === "rejected" && ach.rejection_reason && (
-                          <div className="mt-3 bg-red-50 p-3 rounded-lg text-xs text-red-700">
-                            <span className="font-bold">Rejection Reason:</span>{" "}
-                            {ach.rejection_reason}
-                          </div>
-                        )}
                       </div>
                     ))}
                   </div>
                 )}
               </div>
+            )}
+
+            {selectedTab === "Leaderboard" && (
+              <SectionLeaderboard />
             )}
           </main>
         </div>

@@ -25,20 +25,8 @@ const STUDENT_FIELD_GROUPS = {
   ],
   Achievements: [
     {
-      key: "performance.platformWise.achievements.certifications",
-      label: "Certifications",
-    },
-    {
-      key: "performance.platformWise.achievements.hackathon_winners",
-      label: "Hackathon Winners",
-    },
-    {
-      key: "performance.platformWise.achievements.hackathon_participation",
-      label: "Hackathon Participation",
-    },
-    {
-      key: "performance.platformWise.achievements.workshops",
-      label: "Workshops",
+      key: "achievements",
+      label: "Achievements Data",
     },
   ],
   "Performance Summary": [

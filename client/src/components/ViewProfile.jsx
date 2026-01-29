@@ -8,11 +8,38 @@ import PDFDocument from "../utils/PDFDocument";
 
 const ViewProfile = ({ student, onClose }) => {
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [achievements, setAchievements] = useState(student?.achievements || []);
+
+  useEffect(() => {
+    setAchievements(student?.achievements || []);
+  }, [student]);
+
+  useEffect(() => {
+    const fetchAchievements = async () => {
+      if (!student?.student_id || (student?.achievements || []).length > 0) {
+        return;
+      }
+      try {
+        const res = await fetch(
+          `/api/achievements/my-achievements?studentId=${student.student_id}`
+        );
+        if (res.ok) {
+          const data = await res.json();
+          setAchievements(data);
+        }
+      } catch (error) {
+        console.error("Error fetching achievements:", error);
+      }
+    };
+
+    fetchAchievements();
+  }, [student]);
 
   const handleDownloadPDF = async () => {
     setIsGeneratingPDF(true);
     try {
-      const blob = await pdf(<PDFDocument student={student} />).toBlob();
+      const profileStudent = { ...student, achievements };
+      const blob = await pdf(<PDFDocument student={profileStudent} />).toBlob();
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -110,6 +137,7 @@ const ViewProfile = ({ student, onClose }) => {
                 Hard: student?.performance?.platformWise?.leetcode?.hard,
                 Contests:
                   student?.performance?.platformWise?.leetcode?.contests,
+                Rating: student?.performance?.platformWise?.leetcode?.rating,
                 Badges: student?.performance?.platformWise?.leetcode?.badges,
               }}
             />
@@ -117,11 +145,12 @@ const ViewProfile = ({ student, onClose }) => {
               name="CodeChef"
               icon="/codechef_logo.png"
               color=" hover:text-[#a92700] hover:shadow-[#a92700]"
-              total={student?.performance?.platformWise?.codechef?.contests}
-              subtitle="Contests Participated"
+              total={student?.performance?.platformWise?.codechef?.problems}
+              subtitle="Problems Solved"
               breakdown={{
-                "problems Solved":
-                  student?.performance?.platformWise?.codechef?.problems,
+                Contests:
+                  student?.performance?.platformWise?.codechef?.contests,
+                Rating: student?.performance?.platformWise?.codechef?.rating,
                 Stars: student?.performance?.platformWise?.codechef?.stars,
                 Badges: student?.performance?.platformWise?.codechef?.badges,
               }}
@@ -155,7 +184,7 @@ const ViewProfile = ({ student, onClose }) => {
               breakdown={(
                 student?.performance?.platformWise?.hackerrank?.badgesList || []
               ).reduce((acc, badge) => {
-                acc[badge.name] = `⭐${badge.stars}`;
+                acc[badge.name] = `${badge.stars}⭐`;
                 return acc;
               }, {})}
             />
@@ -173,6 +202,54 @@ const ViewProfile = ({ student, onClose }) => {
               />
             )}
           </div>
+
+          {achievements.length > 0 && (
+            <div className="w-full bg-white rounded-2xl shadow-sm p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">
+                Achievements
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {achievements.map((ach) => (
+                  <div
+                    key={ach.id}
+                    className="border border-gray-100 rounded-xl p-4 bg-gray-50"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-semibold uppercase tracking-wide text-blue-600">
+                        {ach.type}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        {ach.date
+                          ? new Date(ach.date).toLocaleDateString()
+                          : ""}
+                      </span>
+                    </div>
+                    <div className="text-sm font-semibold text-gray-900">
+                      {ach.title}
+                    </div>
+                    <div className="text-xs text-gray-500 mb-2">
+                      {ach.subtype ? ach.subtype : ""}
+                    </div>
+                    {ach.description && (
+                      <p className="text-xs text-gray-600 mb-2">
+                        {ach.description}
+                      </p>
+                    )}
+                    {ach.file_path && (
+                      <a
+                        href={ach.file_path}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-blue-600 hover:underline"
+                      >
+                        View Proof
+                      </a>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Download Button */}

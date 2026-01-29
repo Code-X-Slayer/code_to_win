@@ -226,6 +226,7 @@ export default function CheckYourScore() {
                     Medium: result.data.leetcode?.Problems.Medium,
                     Hard: result.data.leetcode?.Problems.Hard,
                     Contests: result.data.leetcode?.Contests_Attended,
+                    Rating: result.data.leetcode?.Rating,
                     Badges: result.data.leetcode?.Badges,
                   }}
                 />
@@ -239,7 +240,7 @@ export default function CheckYourScore() {
                   label="Badges"
                   subtitle={`${result.data.hackerrank?.Total_Stars || 0} Total Stars`}
                   breakdown={(result.data.hackerrank.Badges || []).reduce((acc, badge) => {
-                    acc[badge.name] = `⭐${badge.stars}`;
+                    acc[badge.name] = `${badge.stars}⭐`;
                     return acc;
                   }, {})}
                 />
@@ -249,11 +250,12 @@ export default function CheckYourScore() {
                   name="CodeChef"
                   color=" hover:text-orange-900 hover:shadow-orange-900"
                   icon="/codechef_logo.png"
-                  total={result.data.codechef?.Contests_Participated || 0}
-                  subtitle="Contests Participated"
+                  total={result.data.codechef?.problemsSolved || 0}
+                  subtitle="Problems Solved"
                   breakdown={{
-                    "Problems Solved": result.data.codechef?.problemsSolved,
-                    Star: result.data.codechef?.Star,
+                    Contests: result.data.codechef?.Contests_Participated,
+                    Rating: result.data.codechef?.Rating,
+                    Stars: result.data.codechef?.Star,
                     Badges: result.data.codechef?.Badges,
                   }}
                 />

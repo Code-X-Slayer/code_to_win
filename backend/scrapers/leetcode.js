@@ -125,14 +125,19 @@ async function scrapeLeetCodeProfile(url) {
     };
 
     // Extract contest data
-    const contestsAttended = contest.attendedContestsCount || 0;
-    const badges = user.badges || 0;
-    // console.log(badges.length);
+    const contestsAttended = contest?.attendedContestsCount || 0;
+    const rating = Math.round(contest?.rating || 0);
+    const badgesList = user?.badges || [];
+    const badgesCount = Array.isArray(badgesList) ? badgesList.length : 0;
+    
+    logger.info(`[SCRAPING] LeetCode data for ${username}: Rating=${rating}, Contests=${contestsAttended}, Badges=${badgesCount}`);
+    
     return {
       Username: username,
       Problems: problems,
       Contests_Attended: contestsAttended,
-      Badges: badges.length,
+      Rating: rating,
+      Badges: badgesCount,
     };
   } catch (error) {
     logger.error(`[SCRAPING] Error in get_leetcode_profile: ${error.message}`);

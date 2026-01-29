@@ -59,7 +59,7 @@ const visitorTracker = async (req, res, next) => {
 
     next();
   } catch (error) {
-    console.error("Visitor tracking error:", error);
+    logger.error("Visitor tracking error:", error);
     next(); // Continue even if tracking fails
   }
 };

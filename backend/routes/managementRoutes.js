@@ -700,7 +700,7 @@ router.post("/check-score", async (req, res) => {
     if (!profiles || !Array.isArray(profiles) || profiles.length === 0) {
       return res.status(404).json({ message: "No coding profiles found" });
     }
-    console.log(profiles);
+    logger.info("Profiles:", profiles);
 
     const profile = profiles[0];
     const results = {};
