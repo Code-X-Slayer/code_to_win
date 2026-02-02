@@ -148,6 +148,7 @@ router.get("/students", async (req, res) => {
         const combined = {
           totalSolved: totalSolved,
           totalContests:
+            (isLeetcodeAccepted ? p.contests_lc : 0) +
             (isCodechefAccepted ? p.contests_cc : 0) +
             (isGfgAccepted ? p.contests_gfg : 0),
           stars_cc: isCodechefAccepted ? p.stars_cc : 0,

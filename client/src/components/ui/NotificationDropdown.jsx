@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { FiBell, FiCheck, FiX, FiPause } from "react-icons/fi";
 import { useAuth } from "../../context/AuthContext";
 
@@ -8,7 +8,7 @@ const NotificationDropdown = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const { currentUser } = useAuth();
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     try {
       const endpoint =
         currentUser.role === "student"
@@ -26,7 +26,7 @@ const NotificationDropdown = () => {
     } catch (err) {
       console.error("Failed to fetch notifications:", err);
     }
-  };
+  }, [currentUser]);
 
   const markAsRead = async (notificationId) => {
     // Don't mark faculty pending requests as read
@@ -69,7 +69,7 @@ const NotificationDropdown = () => {
       const interval = setInterval(fetchNotifications, 30000); // Poll every 30s
       return () => clearInterval(interval);
     }
-  }, [currentUser]);
+  }, [currentUser, fetchNotifications]);
 
   const getStatusIcon = (status) => {
     switch (status) {

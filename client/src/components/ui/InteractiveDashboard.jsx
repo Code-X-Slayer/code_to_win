@@ -15,10 +15,9 @@ import toast from "react-hot-toast";
 import { useMeta } from "../../context/MetaContext";
 
 const InteractiveDashboard = ({
-  data = [],
   title = "Interactive Analytics",
 }) => {
-  const { depts, years, sections } = useMeta();
+  const { depts } = useMeta();
   const [filters, setFilters] = useState({
     year: "all",
     department: "all",
@@ -63,7 +62,7 @@ const InteractiveDashboard = ({
     };
 
     fetchSections();
-  }, [filters.department, filters.year]);
+  }, [filters.department, filters.year, filters.section]);
 
   // Fetch data when filters change
   useEffect(() => {

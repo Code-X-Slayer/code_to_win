@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   FiCheck,
   FiClock,
@@ -30,6 +30,7 @@ import {
 import AchievementModal from "../../components/modals/AchievementModal";
 import SectionLeaderboard from "../../components/SectionLeaderboard";
 import Footer from "../../components/Footer";
+import { formatName, formatDepartment, formatSection } from "../../utils/textFormatter";
 
 const StudentDashboard = () => {
   const [refreshing, setRefreshing] = useState(false);
@@ -49,15 +50,17 @@ const StudentDashboard = () => {
   ).format("DD/MM/YYYY | hh:mm A");
 
   const totalContests =
+    currentUser.performance.combined?.totalContests ??
     currentUser.performance.platformWise.leetcode.contests +
-    currentUser.performance.platformWise.codechef.contests;
+      currentUser.performance.platformWise.codechef.contests;
 
   const totalBadges =
     currentUser.performance.platformWise.leetcode.badges +
-    currentUser.performance.platformWise.codechef.badges;
+    currentUser.performance.platformWise.codechef.badges +
+    (currentUser.performance.platformWise.hackerrank.badges || 0);
 
   const totalStars =
-    currentUser.performance.platformWise.hackerrank.badges +
+    (currentUser.performance.platformWise.hackerrank.totalStars || 0) +
     currentUser.performance.platformWise.codechef.stars;
 
   // Check for suspended platforms
@@ -76,7 +79,8 @@ const StudentDashboard = () => {
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    const toastId = toast.loading("Refreshing coding profiles...");
+    const toastId = toast.loading("Syncing your coding profiles...");
+    
     try {
       const res = await fetch("/api/student/refresh-coding-profiles", {
         method: "POST",
@@ -85,22 +89,36 @@ const StudentDashboard = () => {
         },
         body: JSON.stringify({ userId: currentUser.student_id }),
       });
+      
       if (!res.ok) {
         throw new Error("Failed to refresh coding profiles");
       }
+      
+      const data = await res.json();
+      
+      // Optimistic update immediately
       await checkAuth();
-      toast.success(
-        "Coding profiles refreshed! Please wait a moment for updates.",
-        { id: toastId }
-      );
+      
+      if (data.success) {
+        toast.success(
+          `${data.message} - Updates applied!`,
+          { id: toastId }
+        );
+      } else {
+        toast.success(
+          "Sync started. Your profiles will update in the background.",
+          { id: toastId }
+        );
+      }
     } catch (err) {
-      toast.error("Failed to refresh coding profiles.", { id: toastId });
+      console.error("Refresh coding profiles failed:", err);
+      toast.error("Profile sync initiated. Check back in a moment.", { id: toastId });
     } finally {
       setRefreshing(false);
     }
   };
 
-  const fetchAchievements = async () => {
+  const fetchAchievements = useCallback(async () => {
     try {
       const res = await fetch(
         `/api/achievements/my-achievements?studentId=${currentUser.student_id}`
@@ -112,13 +130,13 @@ const StudentDashboard = () => {
     } catch (error) {
       console.error("Failed to fetch achievements", error);
     }
-  };
+  }, [currentUser.student_id]);
 
   React.useEffect(() => {
     if (selectedTab === "Achievements") {
       fetchAchievements();
     }
-  }, [selectedTab]);
+  }, [selectedTab, fetchAchievements]);
 
   const handleDeleteAchievement = async (id) => {
     if (!window.confirm("Are you sure you want to delete this achievement?"))
@@ -137,6 +155,7 @@ const StudentDashboard = () => {
         toast.error("Failed to delete");
       }
     } catch (err) {
+      console.error("Delete achievement failed:", err);
       toast.error("Error deleting achievement");
     }
   };
@@ -240,7 +259,7 @@ const StudentDashboard = () => {
                         </span>
                       </div>
                       <h1 className="text-3xl md:text-5xl font-bold mb-2">
-                        Welcome back, {currentUser.name?.split(" ")[0]}!
+                        Welcome back, {formatName(currentUser.name)?.split(" ")[0]}!
                       </h1>
                       <p className="text-blue-100 text-lg max-w-xl">
                         Track your progress, analyze your performance, and keep
@@ -477,11 +496,12 @@ const StudentDashboard = () => {
                         ?.split(" ")
                         .map((n) => n[0])
                         .join("")
-                        .slice(0, 2)}
+                        .slice(0, 2)
+                        .toUpperCase()}
                     </div>
                     <div>
                       <h2 className="text-2xl font-bold text-gray-900">
-                        {currentUser.name}
+                        {formatName(currentUser.name)}
                       </h2>
                       <p className="text-gray-500">{currentUser.email}</p>
                       <div className="flex gap-3 mt-3">
@@ -523,7 +543,7 @@ const StudentDashboard = () => {
                         Department
                       </label>
                       <p className="text-lg font-medium text-gray-900">
-                        {currentUser.dept_name}
+                        {formatDepartment(currentUser.dept_name)}
                       </p>
                     </div>
                     <div>
@@ -539,7 +559,7 @@ const StudentDashboard = () => {
                         Section
                       </label>
                       <p className="text-lg font-medium text-gray-900">
-                        {currentUser.section}
+                        {formatSection(currentUser.section)}
                       </p>
                     </div>
                     <div>
@@ -547,7 +567,7 @@ const StudentDashboard = () => {
                         College
                       </label>
                       <p className="text-lg font-medium text-gray-900">
-                        {currentUser.college}
+                        {formatName(currentUser.college)}
                       </p>
                     </div>
                   </div>

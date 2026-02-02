@@ -150,6 +150,7 @@ router.get("/students", async (req, res) => {
         const combined = {
           totalSolved: totalSolved,
           totalContests:
+            (isLeetcodeAccepted ? p.contests_lc : 0) +
             (isCodechefAccepted ? p.contests_cc : 0) +
             (isGfgAccepted ? p.contests_gfg : 0),
           stars_cc: isCodechefAccepted ? p.stars_cc : 0,
@@ -182,7 +183,10 @@ router.get("/students", async (req, res) => {
             badges: isCodechefAccepted ? p.badges_cc : 0,
           },
           hackerrank: {
-            badges: isHackerrankAccepted ? p.stars_hr : 0,
+            badges: isHackerrankAccepted
+              ? (p.badges_hr || JSON.parse(p.badgesList_hr || "[]").length)
+              : 0,
+            totalStars: isHackerrankAccepted ? p.stars_hr : 0,
             badgesList: isHackerrankAccepted
               ? JSON.parse(p.badgesList_hr || "[]")
               : [],
@@ -849,5 +853,5 @@ router.post("/placement-eligibility", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
-
+  
 module.exports = router;

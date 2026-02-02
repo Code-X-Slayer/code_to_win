@@ -164,6 +164,37 @@ router.get("/my-achievements", async (req, res) => {
   }
 });
 
+// GET /api/achievements/pending - Get pending achievements for faculty approval
+router.get("/pending", async (req, res) => {
+  const { facultyId } = req.query;
+  logger.info(`Fetching pending achievements for facultyId=${facultyId}`);
+
+  try {
+    if (!facultyId) {
+      return res.status(400).json({ message: "Faculty ID required" });
+    }
+
+    const [achievements] = await db.query(
+      `SELECT 
+        sa.id, sa.student_id, sa.achievement_type AS type, sa.subtype, 
+        sa.title, sa.date, sa.description, sa.proof_url AS file_path, 
+        sa.created_at, sa.updated_at,
+        sp.name AS student_name, sp.student_id AS roll_number,
+        sp.year, sp.section
+      FROM student_achievements sa
+      JOIN student_profiles sp ON sa.student_id = sp.student_id
+      WHERE sa.status IN ('pending', 'approved', 'rejected')
+      ORDER BY sa.created_at DESC`,
+      []
+    );
+
+    res.json(achievements);
+  } catch (err) {
+    logger.error(`Error fetching pending achievements: ${err.message}`);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 // DELETE /api/achievements/:id - Student deletes an achievement
 router.delete("/:id", async (req, res) => {
   const { id } = req.params;

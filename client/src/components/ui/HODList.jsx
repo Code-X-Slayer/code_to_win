@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   FaSearch,
   FaFilter,
@@ -19,11 +19,7 @@ const HODList = () => {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const { depts } = useMeta();
 
-  useEffect(() => {
-    fetchHODs();
-  }, []);
-
-  const fetchHODs = async () => {
+  const fetchHODs = useCallback(async () => {
     setLoading(true);
     try {
       let url = "/api/admin/hods";
@@ -45,7 +41,11 @@ const HODList = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters.dept]);
+
+  useEffect(() => {
+    fetchHODs();
+  }, [fetchHODs]);
 
   const handleFilterChange = (e) => {
     setFilters({

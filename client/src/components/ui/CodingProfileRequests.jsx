@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { TbUserShare } from "react-icons/tb";
 import { FiPause, FiAlertTriangle } from "react-icons/fi";
 import StudentTable from "./StudentTable";
@@ -8,7 +8,7 @@ function CodingProfileRequests({ dept, year, section, facultyId }) {
   const [loading, setLoading] = useState(true);
   const [selectedStudent, setSelectedStudent] = useState(null);
 
-  const fetchRequests = async () => {
+  const fetchRequests = useCallback(async () => {
     setLoading(true);
     const res = await fetch(
       `/api/faculty/coding-profile-requests?dept=${dept}&year=${year}&section=${section}`
@@ -16,11 +16,11 @@ function CodingProfileRequests({ dept, year, section, facultyId }) {
     const data = await res.json();
     setRequests(data);
     setLoading(false);
-  };
+  }, [dept, year, section]);
 
   useEffect(() => {
     fetchRequests();
-  }, [dept, year, section]);
+  }, [fetchRequests]);
 
   // Group requests by student_id
   const grouped = requests.reduce((acc, req) => {
@@ -76,7 +76,7 @@ function CodingProfileRequests({ dept, year, section, facultyId }) {
         <StudentRequestsModal
           student={selectedStudent}
           onClose={() => setSelectedStudent(null)}
-          onAction={async (platformIdHandled) => {
+          onAction={async () => {
             // Fetch latest requests and use the result directly
             const res = await fetch(
               `/api/faculty/coding-profile-requests?dept=${encodeURIComponent(

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, lazy, Suspense, useMemo } from "react";
+import React, { useEffect, useState, lazy, Suspense, useMemo, useCallback } from "react";
 import { TbUserShare } from "react-icons/tb";
 const ViewProfile = lazy(() => import("./ViewProfile"));
 import { FaSearch, FaChevronLeft, FaChevronRight } from "react-icons/fa";
@@ -9,6 +9,7 @@ import { IoIosSync } from "react-icons/io";
 import * as XLSX from "xlsx";
 import dayjs from "dayjs";
 import toast from "react-hot-toast";
+import { formatName, formatDepartment, formatSection } from "../utils/textFormatter";
 
 const RankBadge = ({ rank }) => {
   if (rank === 1)
@@ -69,15 +70,19 @@ const RankingTable = ({ filter }) => {
     }
   }, [filters.dept, filters.year]);
 
-  const fetchRanks = async () => {
+  const fetchRanks = useCallback(async () => {
     try {
       setFetchingRanks(true);
-      let params = { ...filters };
+      const params = {
+        dept: filters.dept,
+        year: filters.year,
+        section: filters.section,
+      };
       if (topX) params.limit = topX;
 
       // Build query string
       const queryString = Object.entries(params)
-        .filter(([_, v]) => v !== "" && v !== undefined)
+        .filter(([, v]) => v !== "" && v !== undefined)
         .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
         .join("&");
 
@@ -98,11 +103,11 @@ const RankingTable = ({ filter }) => {
     } finally {
       setFetchingRanks(false);
     }
-  };
+  }, [filters.dept, filters.year, filters.section, topX]);
 
   useEffect(() => {
     fetchRanks();
-  }, [JSON.stringify(filters), topX]);
+  }, [fetchRanks]);
 
   const handleChange = (key, value) => {
     setFilters((prev) => {
@@ -486,19 +491,20 @@ const RankingTable = ({ filter }) => {
                         ?.split(" ")
                         .map((n) => n[0])
                         .join("")
-                        .slice(0, 2)}
+                        .slice(0, 2)
+                        .toUpperCase()}
                     </div>
-                    {s.name}
+                    {formatName(s.name)}
                   </td>
                   <td className="py-3 px-4">{s.student_id}</td>
                   <td className="py-3 md:px-4 px-1 sr-only md:not-sr-only">
-                    {s.dept_name}
+                    {formatDepartment(s.dept_name)}
                   </td>
                   <td className="py-3 md:px-4 px-1 sr-only md:not-sr-only">
                     {s.year}
                   </td>
                   <td className="py-3 md:px-4 px-1 sr-only md:not-sr-only">
-                    {s.section}
+                    {formatSection(s.section)}
                   </td>
                   <td className="py-3 md:px-4 px-1 font-semibold">{s.score}</td>
                   <td className="py-3 md:px-4 px-1 ">

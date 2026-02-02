@@ -5,7 +5,7 @@ import { NavLink } from "react-router-dom";
 
 const Footer = () => {
   return (
-    <footer className="relative bg-[#111827] border-t border-gray-200 -z-10 pt-10 pb-5 px-6 text-base text-gray-400">
+    <footer className="relative bg-[#111827] border-t border-gray-200 pt-10 pb-5 px-6 text-base text-gray-400 z-10">
       <div className="max-w-6xl mx-auto flex md:flex-row flex-col justify-around  gap-y-8">
         {/* Logo and Description */}
         <div>
@@ -59,11 +59,19 @@ const Footer = () => {
         </div>
         <div>
           <h3 className="font-semibold text-[#FFFFFF] mb-2">KEY FEATURES</h3>
-          <ul className="space-y-1">
-            <li className="hover:text-[#FFFFFF] ">Dynamic Dashboards</li>
-            <li className="hover:text-[#FFFFFF]">Live Ranking</li>
-            <li className="hover:text-[#FFFFFF]">Check Score</li>
-          </ul>
+          {[
+            { label: "Dynamic Dashboards", link: "/student" },
+            { label: "Live Ranking", link: "/rank" },
+            { label: "Check Score", link: "/checkscore" },
+          ].map((items, index) => (
+            <ul className="space-y-1" key={index}>
+              <li>
+                <NavLink to={items.link} className="hover:text-[#FFFFFF]">
+                  {items.label}
+                </NavLink>
+              </li>
+            </ul>
+          ))}
         </div>
         {/* Platforms */}
         <div>
@@ -79,8 +87,13 @@ const Footer = () => {
               <li>
                 <a
                   href={items.link}
-                  className="hover:text-[#FFFFFF]"
+                  className="hover:text-[#FFFFFF] transition-colors cursor-pointer"
                   target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    window.open(items.link, "_blank", "noopener,noreferrer");
+                  }}
                 >
                   {items.label}
                 </a>
@@ -91,13 +104,7 @@ const Footer = () => {
       </div>
 
       <div className="mt-10 text-center text-base text-gray-300 border-t border-gray-300 pt-6">
-        © 2025 Aditya University. | Developed by{" "}
-        <a
-          href="https://ofzen.in/"
-          className="text-gray-100 hover:underline font-medium"
-        >
-          Ofzen.in
-        </a>
+        © 2025 Aditya University.
       </div>
     </footer>
   );

@@ -3,6 +3,7 @@ import { TbUserShare } from "react-icons/tb";
 import { FiEdit2, FiSearch } from "react-icons/fi";
 import { useMeta } from "../../context/MetaContext";
 import { EditModal } from "../Modals";
+import { formatName, formatDepartment, formatSection } from "../../utils/textFormatter";
 
 const StudentTable = ({
   students = [],
@@ -227,14 +228,15 @@ const StudentTable = ({
                         ?.split(" ")
                         .map((n) => n[0])
                         .join("")
-                        .slice(0, 2)}
+                        .slice(0, 2)
+                        .toUpperCase()}
                     </div>
-                    {s.name}
+                    {formatName(s.name)}
                   </td>
                   <td className="py-3 px-4">{s.student_id}</td>
                   {showBranch && (
                     <td className="py-3 md:px-4 px-1 sr-only md:not-sr-only">
-                      {s.dept_name}
+                      {formatDepartment(s.dept_name)}
                     </td>
                   )}
                   {showYear && (
@@ -244,7 +246,7 @@ const StudentTable = ({
                   )}
                   {showSection && (
                     <td className="py-3 md:px-4 px-1 sr-only md:not-sr-only">
-                      {s.section}
+                      {formatSection(s.section)}
                     </td>
                   )}
                   <td className="py-3 md:px-4 px-1 sr-only md:not-sr-only">

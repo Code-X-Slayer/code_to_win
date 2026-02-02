@@ -12,7 +12,7 @@ export default function CheckYourScore() {
     leetcode: "",
     gfg: "",
     codechef: "",
-    hankerrank: "",
+    hackerrank: "",
   });
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
@@ -52,7 +52,7 @@ export default function CheckYourScore() {
     if (
       form.codechef == "" &&
       form.gfg == "" &&
-      form.hankerrank == "" &&
+      form.hackerrank == "" &&
       form.leetcode == ""
     ) {
       setError("Atleast one platform id is required!");
@@ -67,11 +67,11 @@ export default function CheckYourScore() {
           leetcode_id: form.leetcode,
           codechef_id: form.codechef,
           geeksforgeeks_id: form.gfg,
-          hackerrank_id: form.hankerrank,
+          hackerrank_id: form.hackerrank,
           leetcode_status: form.leetcode ? "accepted" : "none",
           codechef_status: form.codechef ? "accepted" : "none",
           geeksforgeeks_status: form.gfg ? "accepted" : "none",
-          hackerrank_status: form.hankerrank ? "accepted" : "none",
+          hackerrank_status: form.hackerrank ? "accepted" : "none",
         },
       ],
     };
@@ -105,7 +105,7 @@ export default function CheckYourScore() {
     { label: "LeetCode", key: "leetcode" },
     { label: "GeeksforGeeks", key: "gfg" },
     { label: "CodeChef", key: "codechef" },
-    { label: "HackerRank", key: "hankerrank" },
+    { label: "HackerRank", key: "hackerrank" },
   ];
 
   return (
@@ -177,7 +177,7 @@ export default function CheckYourScore() {
                   getPoints("contests_lc") +
                   (result.data.codechef?.Contests_Participated || 0) *
                   getPoints("contests_cc") +
-                  (result.data.hackerrank?.Total_stars || 0) *
+                  (result.data.hackerrank?.Total_Stars || 0) *
                   getPoints("stars_hr") +
                   (result.data.codechef?.Star || 0) * getPoints("stars_cc")
                 }
@@ -203,9 +203,8 @@ export default function CheckYourScore() {
                 color="purple"
                 title="Total Contests Attended"
                 value={
-                  result.data.leetcode?.Contests_Attended ||
-                  0 + result.data.codechef?.Contests_Participated ||
-                  0
+                  (result.data.leetcode?.Contests_Attended || 0) +
+                  (result.data.codechef?.Contests_Participated || 0)
                 }
               />
 
@@ -236,11 +235,11 @@ export default function CheckYourScore() {
                   name="HackerRank"
                   color="hover:text-green-600 hover:shadow-green-600"
                   icon="/HackerRank_logo.png"
-                  total={result.data.hackerrank?.Total_Badges || 0}
+                  total={Number(result.data.hackerrank?.Total_Badges || 0)}
                   label="Badges"
-                  subtitle={`${result.data.hackerrank?.Total_Stars || 0} Total Stars`}
-                  breakdown={(result.data.hackerrank.Badges || []).reduce((acc, badge) => {
-                    acc[badge.name] = `${badge.stars}⭐`;
+                  subtitle={`${Number(result.data.hackerrank?.Total_Stars || 0)} Total Stars ⭐`}
+                  breakdown={(result.data.hackerrank?.Badges || []).reduce((acc, badge) => {
+                    acc[badge.name] = `${Number(badge.stars || 0)}⭐`;
                     return acc;
                   }, {})}
                 />

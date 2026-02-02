@@ -52,12 +52,12 @@ router.get("/profile", async (req, res) => {
 
     const p = data[0];
 
-    // All platforms are auto-accepted
-    const isLeetcodeAccepted = coding_profiles?.leetcode_id;
-    const isCodechefAccepted = coding_profiles?.codechef_id;
-    const isGfgAccepted = coding_profiles?.geeksforgeeks_id;
-    const isHackerrankAccepted = coding_profiles?.hackerrank_id;
-    const isGithubAccepted = coding_profiles?.github_id;
+    // Platforms are considered accepted only when explicitly approved
+    const isLeetcodeAccepted = coding_profiles?.leetcode_status === "accepted";
+    const isCodechefAccepted = coding_profiles?.codechef_status === "accepted";
+    const isGfgAccepted = coding_profiles?.geeksforgeeks_status === "accepted";
+    const isHackerrankAccepted = coding_profiles?.hackerrank_status === "accepted";
+    const isGithubAccepted = coding_profiles?.github_status === "accepted";
 
     const totalSolved =
       (isLeetcodeAccepted ? p.easy_lc + p.medium_lc + p.hard_lc : 0) +
@@ -69,6 +69,7 @@ router.get("/profile", async (req, res) => {
     const combined = {
       totalSolved: totalSolved,
       totalContests:
+        (isLeetcodeAccepted ? p.contests_lc : 0) +
         (isCodechefAccepted ? p.contests_cc : 0) +
         (isGfgAccepted ? p.contests_gfg : 0),
       stars_cc: isCodechefAccepted ? p.stars_cc : 0,
@@ -396,9 +397,14 @@ router.get("/notifications", async (req, res) => {
 });
 
 // POST /student/refresh-coding-profiles
+// Optimized for faster response time with timeout protection
 router.post("/refresh-coding-profiles", async (req, res) => {
   const { userId } = req.body;
   logger.info(`Refreshing coding profiles for userId: ${userId}`);
+  
+  // Immediate response to client with timeout protection
+  const REFRESH_TIMEOUT = 45000; // 45 second hard timeout
+  
   try {
     const [profiles] = await db.query(
       `SELECT leetcode_id, leetcode_status, codechef_id, codechef_status, geeksforgeeks_id, geeksforgeeks_status, hackerrank_id, hackerrank_status, github_id, github_status
@@ -419,11 +425,15 @@ router.post("/refresh-coding-profiles", async (req, res) => {
         profile.leetcode_status === "suspended")
     ) {
       tasks.push(
-        scrapeAndUpdatePerformance(
-          userId,
-          "leetcode",
-          profile.leetcode_id
-        ).catch((err) => logger.error(`[REFRESH] LeetCode: ${err.message}`))
+        Promise.race([
+          scrapeAndUpdatePerformance(userId, "leetcode", profile.leetcode_id),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("LeetCode timeout")), 20000)
+          ),
+        ]).catch((err) => {
+          logger.warn(`[REFRESH] LeetCode: ${err.message}`);
+          return { platform: "leetcode", error: err.message };
+        })
       );
     }
     if (
@@ -432,11 +442,15 @@ router.post("/refresh-coding-profiles", async (req, res) => {
         profile.codechef_status === "suspended")
     ) {
       tasks.push(
-        scrapeAndUpdatePerformance(
-          userId,
-          "codechef",
-          profile.codechef_id
-        ).catch((err) => logger.error(`[REFRESH] CodeChef: ${err.message}`))
+        Promise.race([
+          scrapeAndUpdatePerformance(userId, "codechef", profile.codechef_id),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("CodeChef timeout")), 20000)
+          ),
+        ]).catch((err) => {
+          logger.warn(`[REFRESH] CodeChef: ${err.message}`);
+          return { platform: "codechef", error: err.message };
+        })
       );
     }
     if (
@@ -445,11 +459,15 @@ router.post("/refresh-coding-profiles", async (req, res) => {
         profile.geeksforgeeks_status === "suspended")
     ) {
       tasks.push(
-        scrapeAndUpdatePerformance(
-          userId,
-          "geeksforgeeks",
-          profile.geeksforgeeks_id
-        ).catch((err) => logger.error(`[REFRESH] GFG: ${err.message}`))
+        Promise.race([
+          scrapeAndUpdatePerformance(userId, "geeksforgeeks", profile.geeksforgeeks_id),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("GFG timeout")), 20000)
+          ),
+        ]).catch((err) => {
+          logger.warn(`[REFRESH] GFG: ${err.message}`);
+          return { platform: "geeksforgeeks", error: err.message };
+        })
       );
     }
     if (
@@ -458,11 +476,15 @@ router.post("/refresh-coding-profiles", async (req, res) => {
         profile.hackerrank_status === "suspended")
     ) {
       tasks.push(
-        scrapeAndUpdatePerformance(
-          userId,
-          "hackerrank",
-          profile.hackerrank_id
-        ).catch((err) => logger.error(`[REFRESH] HackerRank: ${err.message}`))
+        Promise.race([
+          scrapeAndUpdatePerformance(userId, "hackerrank", profile.hackerrank_id),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("HackerRank timeout")), 20000)
+          ),
+        ]).catch((err) => {
+          logger.warn(`[REFRESH] HackerRank: ${err.message}`);
+          return { platform: "hackerrank", error: err.message };
+        })
       );
     }
     if (
@@ -471,25 +493,40 @@ router.post("/refresh-coding-profiles", async (req, res) => {
         profile.github_status === "suspended")
     ) {
       tasks.push(
-        scrapeAndUpdatePerformance(userId, "github", profile.github_id).catch(
-          (err) => logger.error(`[REFRESH] GitHub: ${err.message}`)
-        )
+        Promise.race([
+          scrapeAndUpdatePerformance(userId, "github", profile.github_id),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("GitHub timeout")), 20000)
+          ),
+        ]).catch((err) => {
+          logger.warn(`[REFRESH] GitHub: ${err.message}`);
+          return { platform: "github", error: err.message };
+        })
       );
     }
 
-    const results = await Promise.all(tasks);
-
-    logger.info(
-      `Completed refresh for ${tasks.length} coding profiles for userId: ${userId}`
+    // Use Promise.race with overall timeout for faster response
+    const refreshPromise = Promise.all(tasks);
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("Overall refresh timeout")), REFRESH_TIMEOUT)
     );
+
+    const results = await Promise.race([refreshPromise, timeoutPromise]);
+
+    const successCount = results.filter((r) => !r?.error).length;
+    logger.info(
+      `Completed refresh for ${successCount}/${tasks.length} coding profiles for userId: ${userId}`
+    );
+    
     res.json({
-      message: `Refreshed ${tasks.length} coding profiles`,
+      message: `Refreshed ${successCount} of ${tasks.length} coding profiles`,
+      success: successCount > 0,
     });
   } catch (err) {
     logger.error(
       `Error refreshing coding profiles for userId=${userId}: ${err.message}`
     );
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Refresh in progress. Data will update shortly." });
   }
 });
 

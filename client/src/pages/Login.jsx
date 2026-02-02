@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState } from "react";
 import { useNavigate, Navigate, Link } from "react-router-dom";
 import { FiUser, FiLock, FiEye, FiEyeOff, FiUserCheck } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
@@ -42,7 +42,7 @@ const Login = () => {
       }
     } catch (error) {
       console.error("Login error:", error);
-      setErr(result.message);
+      setErr(error?.message || "Login failed. Please try again.");
     } finally {
       setIsSubmitting(false);
     }

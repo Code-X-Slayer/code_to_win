@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   FaSearch,
   FaFilter,
@@ -19,11 +19,7 @@ const FacultyList = () => {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const { depts } = useMeta();
 
-  useEffect(() => {
-    fetchFaculty();
-  }, []);
-
-  const fetchFaculty = async () => {
+  const fetchFaculty = useCallback(async () => {
     setLoading(true);
     try {
       let url = "/api/admin/faculty";
@@ -45,7 +41,11 @@ const FacultyList = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters.dept]);
+
+  useEffect(() => {
+    fetchFaculty();
+  }, [fetchFaculty]);
 
   const handleFilterChange = (e) => {
     setFilters({

@@ -7,7 +7,6 @@ const DashboardSidebar = ({
   selectedTab,
   setSelectedTab,
   menuItems,
-  title = "Dashboard",
   onLogout,
 }) => {
   return (

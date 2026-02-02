@@ -1,11 +1,10 @@
 import React, { useState } from "react";
-import { GrCodepen } from "react-icons/gr";
 import { Link, NavLink } from "react-router-dom";
 import { FiMenu, FiX, FiLogOut, FiUser } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
 import NotificationDropdown from "./ui/NotificationDropdown";
 
-const Navbar = ({ toggleSidebar }) => {
+const Navbar = () => {
   const { logout, currentUser } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -25,16 +24,30 @@ const Navbar = ({ toggleSidebar }) => {
       <div className="mx-auto px-4 sm:px-6 lg:px-10 xl:px-40">
         <div className="flex justify-between h-16 items-center">
           {/* Logo */}
-          <NavLink to={`/${currentUser?.role || ""}`}>
-            <div className="flex flex-row items-center gap-3">
-              <img src="/logo.svg" alt="" className="w-9 md:w-15" />
-              <div className="border border-gray-500 h-10" />
-              <img src="/au_logo.svg" alt="" className="md:w-14 w-8" />
-              <h1 className="md:text-xl text-lg font-bold text-gray-800">
-                CodeTracker
-              </h1>
-            </div>
-          </NavLink>
+          {currentUser ? (
+            <NavLink to={`/${currentUser?.role || ""}`}>
+              <div className="flex flex-row items-center gap-3 hover:opacity-80 transition-opacity">
+                <img src="/au_logo.svg" alt="Aditya University" className="md:w-14 w-10" />
+                <div className="border border-gray-400 h-10" />
+                <h1 className="md:text-xl text-lg font-bold text-gray-800">
+                  Aditya University
+                </h1>
+              </div>
+            </NavLink>
+          ) : (
+            <a href="https://adityauniversity.in/" target="_blank" rel="noopener noreferrer" className="flex flex-row items-center gap-3 hover:opacity-80 transition-opacity group">
+              <img src="/au_logo.svg" alt="Aditya University" className="md:w-14 w-10" />
+              <div className="border border-gray-400 h-10" />
+              <div className="flex flex-col leading-tight">
+                <h1 className="md:text-xl text-lg font-bold text-gray-800 group-hover:text-blue-600 transition-colors">
+                  Aditya University
+                </h1>
+                <span className="text-xs font-semibold tracking-wide text-gray-500 group-hover:text-blue-600">
+                  Code Tracker
+                </span>
+              </div>
+            </a>
+          )}
 
           {/* Desktop Menu */}
           {!currentUser ? (

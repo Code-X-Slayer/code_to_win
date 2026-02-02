@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useMeta } from "../../context/MetaContext";
 import toast from "react-hot-toast";
+import { formatName, formatDepartment } from "../../utils/textFormatter";
 import {
   FiFilter,
   FiDownload,
@@ -546,10 +547,10 @@ const PlacementEligibilityFilter = () => {
                         {student.student_id}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                        {student.name}
+                        {formatName(student.name)}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
-                        {student.dept_name}
+                        {formatDepartment(student.dept_name)}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
                         {student.year}

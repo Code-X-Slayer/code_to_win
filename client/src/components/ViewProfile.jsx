@@ -57,7 +57,7 @@ const ViewProfile = ({ student, onClose }) => {
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-70 flex items-start justify-center h-screen overflow-scroll bg-[#00000055]  "
+      className="fixed inset-0 z-70 flex items-start justify-center h-screen overflow-scroll bg-[#00000055]"
     >
       <div
         className="bg-[#f7f7f7] rounded-xl space-y-4 p-6 w-full flex flex-col items-center max-w-3xl shadow-lg relative"
@@ -121,7 +121,7 @@ const ViewProfile = ({ student, onClose }) => {
             />
           </div>
           {/* Platform-wise Stats */}
-          <div className="grid grid-cols-2  gap-2 md:gap-6 w-full">
+          <div className="grid grid-cols-2 gap-2 md:gap-6 w-full">
             <PlatformCard
               name="LeetCode"
               icon="/LeetCode_logo.png"
@@ -264,7 +264,7 @@ const ViewProfile = ({ student, onClose }) => {
         {/* X Close Button */}
         <button
           onClick={onClose}
-          className=" absolute top-7 right-4 cursor-pointer rounded-xl px-4 py-1 text-[#ffffff] hover:text-gray-800 text-3xl font-bold focus:outline-none"
+          className="absolute top-7 right-4 cursor-pointer rounded-xl px-4 py-1 text-[#ffffff] hover:text-gray-800 text-3xl font-bold focus:outline-none"
           aria-label="Close"
         >
           <IoCloseCircle />

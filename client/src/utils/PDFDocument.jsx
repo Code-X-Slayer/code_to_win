@@ -7,6 +7,7 @@ import {
   Image,
 } from "@react-pdf/renderer";
 import logo from "/title_head.jpg";
+import { formatName, formatDepartment, formatSection } from "./textFormatter";
 
 const styles = StyleSheet.create({
   page: {
@@ -164,11 +165,11 @@ const PDFDocument = ({ student }) => {
           <View style={styles.header}>
             <View style={styles.avatarContainer}>
               <Text style={styles.avatar}>
-                {student?.name?.charAt(0) || "S"}
+                {student?.name?.charAt(0).toUpperCase() || "S"}
               </Text>
             </View>
             <View style={styles.info}>
-              <Text style={styles.name}>{student?.name}</Text>
+              <Text style={styles.name}>{formatName(student?.name)}</Text>
               <Text style={styles.roll}>{student?.student_id}</Text>
             </View>
           </View>
@@ -182,11 +183,11 @@ const PDFDocument = ({ student }) => {
               <Text style={styles.tableHeader}>Degree</Text>
             </View>
             <View style={styles.tableRow}>
-              <Text style={styles.tableCell}>{student?.college || "AEC"}</Text>
-              <Text style={styles.tableCell}>{student?.section || "A"}</Text>
+              <Text style={styles.tableCell}>{formatName(student?.college) || "AEC"}</Text>
+              <Text style={styles.tableCell}>{formatSection(student?.section) || "A"}</Text>
               <Text style={styles.tableCell}>{student?.year || "3"}</Text>
               <Text style={styles.tableCell}>
-                {student?.dept_name || "AML"}
+                {formatDepartment(student?.dept_name) || "AML"}
               </Text>
               <Text style={styles.tableCell}>
                 {student?.degree || "B Tech"}
@@ -210,7 +211,7 @@ const PDFDocument = ({ student }) => {
           </View>
           <View style={styles.statBox}>
             <Text style={styles.statValue}>{student?.score || 0}</Text>
-            <Text style={styles.statLabel}>Grand Total</Text>
+            <Text style={styles.statLabel}>Total Score</Text>
           </View>
         </View>
 
@@ -259,11 +260,11 @@ const PDFDocument = ({ student }) => {
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>HackerRank</Text>
-            <Text style={styles.statValue}>{hackerrank.badges || 0}</Text>
-            <Text style={styles.statLabel}>Total Badges ({hackerrank.totalStars || 0} Stars)</Text>
+            <Text style={styles.statValue}>{Number(hackerrank.badges || 0)}</Text>
+            <Text style={styles.statLabel}>Total Badges ({Number(hackerrank.totalStars || 0)} Stars)</Text>
             <Text style={styles.breakdown}>
               {(hackerrank.badgesList || [])
-                .map((b) => `${b?.name || "Badge"}: ${b?.stars || 0}⭐`)
+                .map((b) => `${b?.name || "Badge"}: ${Number(b?.stars || 0)} Stars`)
                 .join(", ") || "No badges yet"}
             </Text>
           </View>

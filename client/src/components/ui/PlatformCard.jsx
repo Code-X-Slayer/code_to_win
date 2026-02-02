@@ -48,4 +48,4 @@ const PlatformCard = ({
   </div>
 );
 
-export default PlatformCard;
+export default React.memo(PlatformCard);

@@ -5,6 +5,7 @@ import LoadingSpinner from "../../common/LoadingSpinner";
 import Footer from "../../components/Footer";
 import UserProfile from "../../components/ui/UserProfile";
 import DashboardSidebar from "../../components/DashboardSidebar";
+import { formatDepartment } from "../../utils/textFormatter";
 import {
   FiMenu,
   FiUsers,
@@ -120,7 +121,7 @@ function VerificationToggle() {
       const data = await res.json();
       setVerificationRequired(data.verification_required);
     } catch (err) {
-      console.error("Failed to fetch verification status");
+      console.error("Failed to fetch verification status", err);
     }
     setLoading(false);
   };
@@ -146,6 +147,7 @@ function VerificationToggle() {
       }
     } catch (err) {
       toast.error("Error updating verification setting");
+      console.error("Error updating verification setting", err);
     }
   };
 
@@ -190,13 +192,13 @@ function AdminDashboard() {
   const [userMgmtTab, setUserMgmtTab] = useState("addBranch");
   const [changedMetrics, setChangedMetrics] = useState(new Set());
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [customFilters, setCustomFilters] = useState({
+  const [customFilters, _setCustomFilters] = useState({
     dept: "",
     year: "",
     section: "",
   });
-  const [deptWiseFilter, setDeptWiseFilter] = useState("");
-  const { depts, years, sections } = useMeta();
+  const [deptWiseFilter, _setDeptWiseFilter] = useState("");
+  const { depts: _depts, years: _years, sections: _sections } = useMeta();
 
   const menuItems = [
     { key: "Analytics", label: "Analytics Dashboard", icon: <FiBarChart2 /> },
@@ -265,6 +267,7 @@ function AdminDashboard() {
         const data = await res.json();
         setGrading(data.grading || []);
       } catch (err) {
+        console.error("Failed to load grading config", err);
         alert("Failed to load grading config");
         setGrading([]);
       }
@@ -319,7 +322,7 @@ function AdminDashboard() {
     return grouped;
   }, [grading]);
 
-  const handleDownload = async (type) => {
+  const _handleDownload = async (type) => {
     try {
       toast.loading("Preparing download...");
       let url = `/api/download/${type}`;
@@ -355,10 +358,10 @@ function AdminDashboard() {
 
       toast.dismiss();
       toast.success("Download completed!");
-    } catch (error) {
+    } catch (_error) {
       toast.dismiss();
       toast.error("Download failed. Please try again.");
-      console.error("Download error:", error);
+      console.error("Download error:", _error);
     }
   };
 
@@ -455,7 +458,7 @@ function AdminDashboard() {
                   {currentUser.students_per_dept.map((dept) => (
                     <div className="bg-white p-4 rounded-lg shadow">
                       <h2 className="text-gray-500 text-lg">
-                        {dept.dept_name}
+                        {formatDepartment(dept.dept_name)}
                       </h2>
                       <p className="text-xl font-bold">
                         {dept.student_count || 0}

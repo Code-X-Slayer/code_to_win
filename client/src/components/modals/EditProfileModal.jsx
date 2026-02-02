@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useMeta } from "../../context/MetaContext";
 import { useAuth } from "../../context/AuthContext";
 import { FaUserPlus, FaTrashAlt } from "react-icons/fa";
@@ -33,22 +33,24 @@ export default function EditModal({
   onClose,
   user, // The student being edited
   onSuccess,
-  adminView = false, // True if opened by Admin or HOD
 }) {
   const { depts, years } = useMeta();
   const { currentUser } = useAuth();
   const isManager =
     currentUser?.role === "admin" || currentUser?.role === "hod";
 
-  const savedData = {
-    name: user.name || "",
-    roll: user.student_id || "",
-    email: user.email || "",
-    year: user.year || "",
-    section: user.section || "",
-    dept_code: user.dept_code || "",
-    degree: user.degree || "",
-  };
+  const savedData = useMemo(
+    () => ({
+      name: user.name || "",
+      roll: user.student_id || "",
+      email: user.email || "",
+      year: user.year || "",
+      section: user.section || "",
+      dept_code: user.dept_code || "",
+      degree: user.degree || "",
+    }),
+    [user]
+  );
   const [form, setForm] = useState(savedData);
   const [status, setStatus] = useState({
     loading: false,
@@ -66,7 +68,7 @@ export default function EditModal({
     if (!isManager && savedData.dept_code && savedData.year) {
       fetchSections(savedData.dept_code, savedData.year);
     }
-  }, [user]);
+  }, [savedData, isManager]);
 
   const fetchSections = async (deptCode, year) => {
     if (!deptCode || !year) {

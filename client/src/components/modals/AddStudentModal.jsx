@@ -17,7 +17,7 @@ export default function AddIndividualStudentModel({ onSuccess, ...props }) {
     success: null,
   });
 
-  const fetchSections = async (dept, year, setForm) => {
+  const fetchSections = async (dept, year) => {
     if (dept && year) {
       setLoadingSections(true);
       try {
@@ -39,13 +39,13 @@ export default function AddIndividualStudentModel({ onSuccess, ...props }) {
   const handleDeptChange = (val, setForm) => {
     setCurrentDept(val);
     setForm((prev) => ({ ...prev, section: "" }));
-    fetchSections(val, currentYear, setForm);
+    fetchSections(val, currentYear);
   };
 
   const handleYearChange = (val, setForm) => {
     setCurrentYear(val);
     setForm((prev) => ({ ...prev, section: "" }));
-    fetchSections(currentDept, val, setForm);
+    fetchSections(currentDept, val);
   };
 
   const handleSubmit = async (form, setForm) => {

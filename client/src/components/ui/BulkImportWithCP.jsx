@@ -22,7 +22,7 @@ const downloadSampleCSV = () => {
   document.body.removeChild(a);
 };
 
-const bulkImportWithCP = ({ onSuccess }) => {
+const BulkImportWithCP = ({ onSuccess }) => {
   const { depts, years } = useMeta();
   const [sectionsList, setSectionsList] = useState([]);
   const [loadingSections, setLoadingSections] = useState(false);
@@ -371,4 +371,4 @@ const bulkImportWithCP = ({ onSuccess }) => {
   );
 };
 
-export default bulkImportWithCP;
+export default BulkImportWithCP;

@@ -20,4 +20,19 @@ export default defineConfig({
     },
   },
   plugins: [react(), tailwindcss()],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ["react", "react-dom", "react-router-dom"],
+          charts: ["recharts"],
+          exportXlsx: ["xlsx"],
+          exportPdf: ["@react-pdf/renderer"],
+          icons: ["react-icons"],
+          ui: ["aos", "dayjs", "react-hot-toast"],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 1600,
+  },
 });

@@ -81,8 +81,6 @@ const HOD_FIELD_GROUPS = {
 const AdvancedExport = ({
   students,
   filenamePrefix = "custom_export",
-  onExportFaculty, // Keeping specifically as fallback or alternative if passed
-  onExportHOD,
   fetchFacultyData, // New prop to fetch JSON data
   fetchHODData, // New prop to fetch JSON data
 }) => {
@@ -143,7 +141,7 @@ const AdvancedExport = ({
   };
 
   /* New Props: enableStaffExport, onExportFaculty, onExportHOD */
-  const { depts: allDepts, years: allYears, sections: allSections } = useMeta();
+  const { depts: allDepts, years: _allYears, sections: _allSections } = useMeta();
   const [filters, setFilters] = useState({
     dept: "",
     year: "",

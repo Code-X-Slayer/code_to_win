@@ -18,12 +18,18 @@ router.get("/overall", async (req, res) => {
   logger.info("Fetching overall ranking");
   try {
     const scoreExpr = await getScoreExpression();
-    const limit = Math.max(1, Math.min(parseInt(req.query.limit) || 20000)); // max 500
+    const limit = Math.max(1, Math.min(parseInt(req.query.limit) || 20000)); // max 20000
     const [rows] = await db.query(
       `SELECT 
   sp.student_id, 
   sp.*, 
   d.dept_name, 
+  p.*,
+  cp.leetcode_status,
+  cp.codechef_status,
+  cp.geeksforgeeks_status,
+  cp.hackerrank_status,
+  cp.github_status,
   ${scoreExpr.replace(/p\.(\w+)/g, (match, metric) => {
     if (metric.includes("_lc"))
       return `CASE WHEN COALESCE(cp.leetcode_status, '') = 'accepted' THEN p.${metric} ELSE 0 END`;
@@ -64,92 +70,81 @@ LIMIT ?`,
       );
     }
 
-    // Fetch and attach performance data for each student
+    // Attach performance data for each student (no extra queries)
     for (const student of rows) {
-      const [perfRows] = await db.query(
-        `SELECT * FROM student_performance WHERE student_id = ?`,
-        [student.student_id]
-      );
-      const [codingProfiles] = await db.query(
-        `SELECT leetcode_status, codechef_status, geeksforgeeks_status, hackerrank_status, github_status FROM student_coding_profiles WHERE student_id = ?`,
-        [student.student_id]
-      );
+      const p = student;
+      const cp = student || {};
+      const isLeetcodeAccepted = cp.leetcode_status === "accepted";
+      const isCodechefAccepted = cp.codechef_status === "accepted";
+      const isGfgAccepted = cp.geeksforgeeks_status === "accepted";
+      const isHackerrankAccepted = cp.hackerrank_status === "accepted";
+      const isGithubAccepted = cp.github_status === "accepted";
 
-      if (perfRows.length > 0) {
-        const p = perfRows[0];
-        const cp = codingProfiles[0] || {};
+      const totalSolved =
+        (isLeetcodeAccepted ? p.easy_lc + p.medium_lc + p.hard_lc : 0) +
+        (isGfgAccepted
+          ? p.school_gfg +
+            p.basic_gfg +
+            p.easy_gfg +
+            p.medium_gfg +
+            p.hard_gfg
+          : 0) +
+        (isCodechefAccepted ? p.problems_cc : 0);
 
-        const isLeetcodeAccepted = cp.leetcode_status === "accepted";
-        const isCodechefAccepted = cp.codechef_status === "accepted";
-        const isGfgAccepted = cp.geeksforgeeks_status === "accepted";
-        const isHackerrankAccepted = cp.hackerrank_status === "accepted";
-        const isGithubAccepted = cp.github_status === "accepted";
+      const combined = {
+        totalSolved: totalSolved,
+        totalContests:
+          (isLeetcodeAccepted ? p.contests_lc : 0) +
+          (isCodechefAccepted ? p.contests_cc : 0) +
+          (isGfgAccepted ? p.contests_gfg : 0),
+        stars_cc: isCodechefAccepted ? p.stars_cc : 0,
+        badges_hr: isHackerrankAccepted ? p.badges_hr : 0,
+        last_updated: p.last_updated,
+      };
 
-        const totalSolved =
-          (isLeetcodeAccepted ? p.easy_lc + p.medium_lc + p.hard_lc : 0) +
-          (isGfgAccepted
-            ? p.school_gfg +
-              p.basic_gfg +
-              p.easy_gfg +
-              p.medium_gfg +
-              p.hard_gfg
-            : 0) +
-          (isCodechefAccepted ? p.problems_cc : 0);
+      const platformWise = {
+        leetcode: {
+          easy: isLeetcodeAccepted ? p.easy_lc : 0,
+          medium: isLeetcodeAccepted ? p.medium_lc : 0,
+          hard: isLeetcodeAccepted ? p.hard_lc : 0,
+          contests: isLeetcodeAccepted ? p.contests_lc : 0,
+          rating: isLeetcodeAccepted ? p.rating_lc : 0,
+          badges: isLeetcodeAccepted ? p.badges_lc : 0,
+        },
+        gfg: {
+          school: isGfgAccepted ? p.school_gfg : 0,
+          basic: isGfgAccepted ? p.basic_gfg : 0,
+          easy: isGfgAccepted ? p.easy_gfg : 0,
+          medium: isGfgAccepted ? p.medium_gfg : 0,
+          hard: isGfgAccepted ? p.hard_gfg : 0,
+          contests: isGfgAccepted ? p.contests_gfg : 0,
+        },
+        codechef: {
+          problems: isCodechefAccepted ? p.problems_cc : 0,
+          contests: isCodechefAccepted ? p.contests_cc : 0,
+          rating: isCodechefAccepted ? p.rating_cc : 0,
+          stars: isCodechefAccepted ? p.stars_cc : 0,
+          badges: isCodechefAccepted ? p.badges_cc : 0,
+        },
+        hackerrank: {
+          badges: isHackerrankAccepted
+            ? (p.badges_hr || JSON.parse(p.badgesList_hr || "[]").length)
+            : 0,
+          totalStars: isHackerrankAccepted ? p.stars_hr : 0,
+          badgesList: isHackerrankAccepted
+            ? JSON.parse(p.badgesList_hr || "[]")
+            : [],
+        },
+        github: {
+          repos: isGithubAccepted ? p.repos_gh : 0,
+          contributions: isGithubAccepted ? p.contributions_gh : 0,
+        },
+      };
 
-        const combined = {
-          totalSolved: totalSolved,
-          totalContests:
-            (isCodechefAccepted ? p.contests_cc : 0) +
-            (isGfgAccepted ? p.contests_gfg : 0),
-          stars_cc: isCodechefAccepted ? p.stars_cc : 0,
-          badges_hr: isHackerrankAccepted ? p.badges_hr : 0,
-          last_updated: p.last_updated,
-        };
-
-        const platformWise = {
-          leetcode: {
-            easy: isLeetcodeAccepted ? p.easy_lc : 0,
-            medium: isLeetcodeAccepted ? p.medium_lc : 0,
-            hard: isLeetcodeAccepted ? p.hard_lc : 0,
-            contests: isLeetcodeAccepted ? p.contests_lc : 0,
-            rating: isLeetcodeAccepted ? p.rating_lc : 0,
-            badges: isLeetcodeAccepted ? p.badges_lc : 0,
-          },
-          gfg: {
-            school: isGfgAccepted ? p.school_gfg : 0,
-            basic: isGfgAccepted ? p.basic_gfg : 0,
-            easy: isGfgAccepted ? p.easy_gfg : 0,
-            medium: isGfgAccepted ? p.medium_gfg : 0,
-            hard: isGfgAccepted ? p.hard_gfg : 0,
-            contests: isGfgAccepted ? p.contests_gfg : 0,
-          },
-          codechef: {
-            problems: isCodechefAccepted ? p.problems_cc : 0,
-            contests: isCodechefAccepted ? p.contests_cc : 0,
-            rating: isCodechefAccepted ? p.rating_cc : 0,
-            stars: isCodechefAccepted ? p.stars_cc : 0,
-            badges: isCodechefAccepted ? p.badges_cc : 0,
-          },
-          hackerrank: {
-            badges: isHackerrankAccepted 
-              ? (p.badges_hr || JSON.parse(p.badgesList_hr || "[]").length)
-              : 0,
-            totalStars: isHackerrankAccepted ? p.stars_hr : 0,
-            badgesList: isHackerrankAccepted
-              ? JSON.parse(p.badgesList_hr || "[]")
-              : [],
-          },
-          github: {
-            repos: isGithubAccepted ? p.repos_gh : 0,
-            contributions: isGithubAccepted ? p.contributions_gh : 0,
-          },
-        };
-
-        student.performance = {
-          combined,
-          platformWise,
-        };
-      }
+      student.performance = {
+        combined,
+        platformWise,
+      };
     }
 
     logger.info(`Fetched overall ranking, count=${rows.length}`);
@@ -186,11 +181,17 @@ router.get("/filter", async (req, res) => {
       where += " AND (sp.name LIKE ? OR sp.roll_number LIKE ?)";
       params.push(`%${req.query.search}%`, `%${req.query.search}%`);
     }
-    const limit = Math.max(1, Math.min(parseInt(req.query.limit) || 2000)); // max 1000
+    const limit = Math.max(1, Math.min(parseInt(req.query.limit) || 2000)); // max 2000
     const [rows] = await db.query(
       `SELECT 
   sp.*, 
   d.dept_name, 
+  p.*,
+  cp.leetcode_status,
+  cp.codechef_status,
+  cp.geeksforgeeks_status,
+  cp.hackerrank_status,
+  cp.github_status,
   ${scoreExpr.replace(/p\.(\w+)/g, (match, metric) => {
     if (metric.includes("_lc"))
       return `CASE WHEN COALESCE(cp.leetcode_status, '') = 'accepted' THEN p.${metric} ELSE 0 END`;
@@ -221,92 +222,81 @@ LIMIT ?`,
     }
 
     rows.forEach((s, i) => (s.rank = i + 1));
-    // Attach performance for each student
+    // Attach performance for each student (no extra queries)
     for (const student of rows) {
-      const [perfRows] = await db.query(
-        `SELECT * FROM student_performance WHERE student_id = ?`,
-        [student.student_id]
-      );
-      const [codingProfiles] = await db.query(
-        `SELECT leetcode_status, codechef_status, geeksforgeeks_status, hackerrank_status, github_status FROM student_coding_profiles WHERE student_id = ?`,
-        [student.student_id]
-      );
+      const p = student;
+      const cp = student || {};
+      const isLeetcodeAccepted = cp.leetcode_status === "accepted";
+      const isCodechefAccepted = cp.codechef_status === "accepted";
+      const isGfgAccepted = cp.geeksforgeeks_status === "accepted";
+      const isHackerrankAccepted = cp.hackerrank_status === "accepted";
+      const isGithubAccepted = cp.github_status === "accepted";
 
-      if (perfRows.length > 0) {
-        const p = perfRows[0];
-        const cp = codingProfiles[0] || {};
+      const totalSolved =
+        (isLeetcodeAccepted ? p.easy_lc + p.medium_lc + p.hard_lc : 0) +
+        (isGfgAccepted
+          ? p.school_gfg +
+            p.basic_gfg +
+            p.easy_gfg +
+            p.medium_gfg +
+            p.hard_gfg
+          : 0) +
+        (isCodechefAccepted ? p.problems_cc : 0);
 
-        const isLeetcodeAccepted = cp.leetcode_status === "accepted";
-        const isCodechefAccepted = cp.codechef_status === "accepted";
-        const isGfgAccepted = cp.geeksforgeeks_status === "accepted";
-        const isHackerrankAccepted = cp.hackerrank_status === "accepted";
-        const isGithubAccepted = cp.github_status === "accepted";
+      const combined = {
+        totalSolved: totalSolved,
+        totalContests:
+          (isLeetcodeAccepted ? p.contests_lc : 0) +
+          (isCodechefAccepted ? p.contests_cc : 0) +
+          (isGfgAccepted ? p.contests_gfg : 0),
+        stars_cc: isCodechefAccepted ? p.stars_cc : 0,
+        badges_hr: isHackerrankAccepted ? p.badges_hr : 0,
+        last_updated: p.last_updated,
+      };
 
-        const totalSolved =
-          (isLeetcodeAccepted ? p.easy_lc + p.medium_lc + p.hard_lc : 0) +
-          (isGfgAccepted
-            ? p.school_gfg +
-              p.basic_gfg +
-              p.easy_gfg +
-              p.medium_gfg +
-              p.hard_gfg
-            : 0) +
-          (isCodechefAccepted ? p.problems_cc : 0);
+      const platformWise = {
+        leetcode: {
+          easy: isLeetcodeAccepted ? p.easy_lc : 0,
+          medium: isLeetcodeAccepted ? p.medium_lc : 0,
+          hard: isLeetcodeAccepted ? p.hard_lc : 0,
+          contests: isLeetcodeAccepted ? p.contests_lc : 0,
+          rating: isLeetcodeAccepted ? p.rating_lc : 0,
+          badges: isLeetcodeAccepted ? p.badges_lc : 0,
+        },
+        gfg: {
+          school: isGfgAccepted ? p.school_gfg : 0,
+          basic: isGfgAccepted ? p.basic_gfg : 0,
+          easy: isGfgAccepted ? p.easy_gfg : 0,
+          medium: isGfgAccepted ? p.medium_gfg : 0,
+          hard: isGfgAccepted ? p.hard_gfg : 0,
+          contests: isGfgAccepted ? p.contests_gfg : 0,
+        },
+        codechef: {
+          problems: isCodechefAccepted ? p.problems_cc : 0,
+          contests: isCodechefAccepted ? p.contests_cc : 0,
+          rating: isCodechefAccepted ? p.rating_cc : 0,
+          stars: isCodechefAccepted ? p.stars_cc : 0,
+          badges: isCodechefAccepted ? p.badges_cc : 0,
+        },
+        hackerrank: {
+          badges: isHackerrankAccepted
+            ? (p.badges_hr || JSON.parse(p.badgesList_hr || "[]").length)
+            : 0,
+          totalStars: isHackerrankAccepted ? p.stars_hr : 0,
+          badgesList: isHackerrankAccepted
+            ? JSON.parse(p.badgesList_hr || "[]")
+            : [],
+        },
+        github: {
+          repos: isGithubAccepted ? p.repos_gh : 0,
+          contributions: isGithubAccepted ? p.contributions_gh : 0,
+        },
+      };
 
-        const combined = {
-          totalSolved: totalSolved,
-          totalContests:
-            (isCodechefAccepted ? p.contests_cc : 0) +
-            (isGfgAccepted ? p.contests_gfg : 0),
-          stars_cc: isCodechefAccepted ? p.stars_cc : 0,
-          badges_hr: isHackerrankAccepted ? p.badges_hr : 0,
-          last_updated: p.last_updated,
-        };
-
-        const platformWise = {
-          leetcode: {
-            easy: isLeetcodeAccepted ? p.easy_lc : 0,
-            medium: isLeetcodeAccepted ? p.medium_lc : 0,
-            hard: isLeetcodeAccepted ? p.hard_lc : 0,
-            contests: isLeetcodeAccepted ? p.contests_lc : 0,
-            rating: isLeetcodeAccepted ? p.rating_lc : 0,
-            badges: isLeetcodeAccepted ? p.badges_lc : 0,
-          },
-          gfg: {
-            school: isGfgAccepted ? p.school_gfg : 0,
-            basic: isGfgAccepted ? p.basic_gfg : 0,
-            easy: isGfgAccepted ? p.easy_gfg : 0,
-            medium: isGfgAccepted ? p.medium_gfg : 0,
-            hard: isGfgAccepted ? p.hard_gfg : 0,
-            contests: isGfgAccepted ? p.contests_gfg : 0,
-          },
-          codechef: {
-            problems: isCodechefAccepted ? p.problems_cc : 0,
-            contests: isCodechefAccepted ? p.contests_cc : 0,
-            rating: isCodechefAccepted ? p.rating_cc : 0,
-            stars: isCodechefAccepted ? p.stars_cc : 0,
-            badges: isCodechefAccepted ? p.badges_cc : 0,
-          },
-          hackerrank: {
-            badges: isHackerrankAccepted 
-              ? (p.badges_hr || JSON.parse(p.badgesList_hr || "[]").length)
-              : 0,
-            totalStars: isHackerrankAccepted ? p.stars_hr : 0,
-            badgesList: isHackerrankAccepted
-              ? JSON.parse(p.badgesList_hr || "[]")
-              : [],
-          },
-          github: {
-            repos: isGithubAccepted ? p.repos_gh : 0,
-            contributions: isGithubAccepted ? p.contributions_gh : 0,
-          },
-        };
-
-        student.performance = {
-          combined,
-          platformWise,
-        };
-      }
+      student.performance = {
+        combined,
+        platformWise,
+      };
     }
     logger.info(`Fetched filtered ranking, count=${rows.length}`);
     res.json(rows);

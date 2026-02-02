@@ -59,6 +59,7 @@ export default function DeleteIndividualStudentModal({ onSuccess }) {
       setUser(await response.json());
       setConfirmDelete(true);
     } catch (error) {
+      console.error("Error fetching user profile:", error);
       setStatus({
         loading: false,
         error: "Error fetching user profile.",

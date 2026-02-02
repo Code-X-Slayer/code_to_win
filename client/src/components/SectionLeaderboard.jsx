@@ -1,11 +1,10 @@
-import React, { useEffect, useState, lazy, Suspense, useMemo } from "react";
-import { TbUserShare } from "react-icons/tb";
+import React, { useEffect, useState, lazy, Suspense, useMemo, useCallback } from "react";
 const ViewProfile = lazy(() => import("./ViewProfile"));
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { useAuth } from "../context/AuthContext";
 import LoadingSpinner from "../common/LoadingSpinner";
 import toast from "react-hot-toast";
-import dayjs from "dayjs";
+import { formatName, formatDepartment, formatSection } from "../utils/textFormatter";
 
 const RankBadge = ({ rank }) => {
   if (rank === 1)
@@ -27,11 +26,7 @@ const SectionLeaderboard = () => {
   const [itemsPerPage] = useState(20);
   const { currentUser } = useAuth();
 
-  useEffect(() => {
-    fetchSectionLeaderboard();
-  }, [currentUser?.student_id]);
-
-  const fetchSectionLeaderboard = async () => {
+  const fetchSectionLeaderboard = useCallback(async () => {
     try {
       setLoading(true);
       const res = await fetch(
@@ -62,7 +57,11 @@ const SectionLeaderboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentUser?.student_id]);
+
+  useEffect(() => {
+    fetchSectionLeaderboard();
+  }, [fetchSectionLeaderboard]);
 
   // Pagination logic
   const totalPages = Math.ceil(leaderboard.length / itemsPerPage);
@@ -107,7 +106,7 @@ const SectionLeaderboard = () => {
           <h2 className="text-2xl font-bold text-gray-800 mb-4">Section Leaderboard</h2>
           {sectionInfo && (
             <p className="text-gray-600 mb-4">
-              {sectionInfo.dept_name} • Year {sectionInfo.year} • Section {sectionInfo.section}
+              {formatDepartment(sectionInfo.dept_name)} • Year {sectionInfo.year} • Section {formatSection(sectionInfo.section)}
             </p>
           )}
           <p className="text-gray-500 text-lg">
@@ -128,8 +127,8 @@ const SectionLeaderboard = () => {
         <h1 className="text-3xl font-bold text-gray-800 mb-2">Section Leaderboard</h1>
         {sectionInfo && (
           <p className="text-gray-600">
-            {sectionInfo.dept_name} • {sectionInfo.year}
-            {sectionInfo.section ? ` • Section ${sectionInfo.section}` : ""}
+            {formatDepartment(sectionInfo.dept_name)} • Year {sectionInfo.year}
+            {sectionInfo.section ? ` • Section ${formatSection(sectionInfo.section)}` : ""}
           </p>
         )}
       </div>
@@ -176,7 +175,7 @@ const SectionLeaderboard = () => {
               </tr>
             </thead>
             <tbody>
-              {paginatedRanks.map((student, idx) => {
+              {paginatedRanks.map((student) => {
                 // Use combined totals from backend for consistency
                 const totalSolved = student.combined?.totalSolved || 
                   ((student.performance?.platformWise?.leetcode?.easy || 0) +
@@ -209,7 +208,7 @@ const SectionLeaderboard = () => {
                       {student.student_id}
                     </td>
                     <td className="px-6 py-4 font-medium text-gray-900">
-                      {student.name}
+                      {formatName(student.name)}
                       {isCurrentUser && (
                         <span className="ml-2 text-xs bg-purple-200 text-purple-700 px-2 py-1 rounded-full">
                           You

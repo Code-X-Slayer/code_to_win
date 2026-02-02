@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   FaSearch,
   FaEdit,
@@ -22,11 +22,7 @@ const AdminList = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const { currentUser } = useAuth();
 
-  useEffect(() => {
-    fetchAdmins();
-  }, []);
-
-  const fetchAdmins = async () => {
+  const fetchAdmins = useCallback(async () => {
     setLoading(true);
     try {
       const response = await fetch(
@@ -44,7 +40,11 @@ const AdminList = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentUser.user_id]);
+
+  useEffect(() => {
+    fetchAdmins();
+  }, [fetchAdmins]);
 
   const startEdit = (admin) => {
     setEditingId(admin.admin_id);
