@@ -69,6 +69,10 @@ const HODList = () => {
     });
   };
 
+  const getRoleLabel = (hod) => {
+    return hod.is_deputy_hod ? "Deputy HOD" : "HOD";
+  };
+
   const cancelEdit = () => {
     setEditingId(null);
     setEditForm({});
@@ -210,6 +214,9 @@ const HODList = () => {
                 Email
               </th>
               <th className="px-1 md:px-6 py-3 text-left md:text-sm text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Role
+              </th>
+              <th className="px-1 md:px-6 py-3 text-left md:text-sm text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Dept
               </th>
               <th className="px-1 md:px-6 py-3 text-left md:text-sm text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -220,7 +227,7 @@ const HODList = () => {
           <tbody className="bg-white divide-y divide-gray-200">
             {hods.length === 0 ? (
               <tr>
-                <td colSpan="4" className="px-6 py-4 text-center text-gray-500">
+                <td colSpan="6" className="px-6 py-4 text-center text-gray-500">
                   No HODs found
                 </td>
               </tr>
@@ -269,6 +276,11 @@ const HODList = () => {
                     ) : (
                         <div className="text-gray-500 text-xs md:text-sm">{hod.email}</div>
                     )}
+                  </td>
+                  <td className="px-1 md:px-6 py-4 whitespace-nowrap">
+                    <div className="text-gray-700 text-xs md:text-sm font-medium">
+                      {getRoleLabel(hod)}
+                    </div>
                   </td>
                   <td className="px-1 md:px-6 py-4 whitespace-nowrap">
                     {editingId === hod.hod_id ? (

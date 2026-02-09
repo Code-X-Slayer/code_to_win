@@ -215,6 +215,67 @@ router.post("/add-hod", async (req, res) => {
   }
 });
 
+// POST /api/add-deputy-hod - Add a new Deputy HOD
+router.post("/add-deputy-hod", async (req, res) => {
+  const { deputyHodId, name, dept, email } = req.body;
+  logger.info(`Add Deputy HOD request: ${JSON.stringify(req.body)}`);
+
+  const connection = await db.getConnection(); // Use a connection from the pool
+
+  try {
+    await connection.beginTransaction();
+    logger.info(`Adding Deputy HOD: ${deputyHodId}, ${name}, ${dept}, ${email}`);
+
+    const [columnCheck] = await connection.query(
+      `SELECT COUNT(*) AS column_exists
+       FROM information_schema.COLUMNS
+       WHERE TABLE_SCHEMA = DATABASE()
+         AND TABLE_NAME = 'hod_profiles'
+         AND COLUMN_NAME = 'is_deputy_hod'`
+    );
+    if (!columnCheck[0]?.column_exists) {
+      await connection.rollback();
+      logger.error("Deputy HOD migration missing: hod_profiles.is_deputy_hod");
+      return res.status(500).json({
+        message:
+          "Deputy HOD support is not installed. Run the add_deputy_hod_support.sql migration.",
+      });
+    }
+
+    const hashed = await bcrypt.hash("hod@aditya", 10);
+
+    // 1. Insert into users table with "hod" role (Deputy HODs use HOD login)
+    const [result] = await connection.query(
+      `INSERT INTO users (user_id, email, password, role) VALUES (?,?, ?, ?)`,
+      [deputyHodId, email, hashed, "hod"]
+    );
+
+    // 2. Insert into hod_profiles table with is_deputy_hod flagged as TRUE
+    await connection.query(
+      `INSERT INTO hod_profiles 
+        (hod_id, name, dept_code, is_deputy_hod)
+        VALUES (?, ?, ?, ?)`,
+      [deputyHodId, name, dept, true]
+    );
+
+    await connection.commit();
+    logger.info(`Deputy HOD added successfully: ${deputyHodId}`);
+    res.status(200).json({ message: "Deputy HOD added successfully" });
+  } catch (err) {
+    await connection.rollback();
+    logger.error(`Error adding Deputy HOD: ${err.message}`);
+    res.status(500).json({
+      message:
+        err.code === "ER_DUP_ENTRY"
+          ? `Deputy HOD with ID ${deputyHodId} already exists`
+          : err.message,
+      error: err.errno,
+    });
+  } finally {
+    connection.release();
+  }
+});
+
 //P0ST /api/reset-password
 router.post("/reset-password", async (req, res) => {
   const { userId, password } = req.body;

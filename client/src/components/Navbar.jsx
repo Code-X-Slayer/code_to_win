@@ -13,6 +13,14 @@ const Navbar = () => {
       ? "text-blue-600 border-b-2 border-blue-600 pb-1"
       : "text-gray-800 hover:text-blue-600 pb-1";
 
+  // Helper function to get display role
+  const getDisplayRole = () => {
+    if (currentUser?.role === "hod" && currentUser?.is_deputy_hod) {
+      return "Deputy HOD";
+    }
+    return currentUser?.role || "";
+  };
+
   return (
     <nav
       className={`${
@@ -65,7 +73,7 @@ const Navbar = () => {
                 <FiUser />
                 {currentUser?.name}
                 <span className="text-sm font-normal text-gray-500 uppercase">
-                  ({currentUser?.role})
+                  ({getDisplayRole()})
                 </span>
               </div>
 
