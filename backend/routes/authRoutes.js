@@ -12,14 +12,17 @@ const { normalizeUserId, isValidUserId } = require("../utils/userValidation");
 
 require("dotenv").config();
 
-// Email configuration
+// Email configuration (use env vars)
 const transports = [
-  { user: "codetracker.info1@gmail.com", pass: "jdjb vobp uoro buhm" },
-  { user: "codetracker.info2@gmail.com", pass: "wihf kkpn mpnf fglv" },
-];
+  { user: process.env.EMAIL_USER_1, pass: process.env.EMAIL_PASS_1 },
+  { user: process.env.EMAIL_USER_2, pass: process.env.EMAIL_PASS_2 },
+].filter((t) => t.user && t.pass);
 
 let i = 0;
 function getNextTransporter() {
+  if (transports.length === 0) {
+    throw new Error("Email transport not configured");
+  }
   const creds = transports[i % transports.length];
   i = (i + 1) % transports.length;
   return nodemailer.createTransport({

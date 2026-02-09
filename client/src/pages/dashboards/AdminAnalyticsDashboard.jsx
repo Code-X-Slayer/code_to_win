@@ -24,8 +24,8 @@ const COLORS = [
 ];
 
 const AdminAnalyticsDashboard = () => {
-  const { currentUser } = useAuth();
-  const { depts } = useMeta();
+  const { currentUser: _currentUser } = useAuth();
+  const { depts: _depts } = useMeta();
   const [loading, setLoading] = useState(true);
   const [kpiData, setKpiData] = useState({
     metrics: {},

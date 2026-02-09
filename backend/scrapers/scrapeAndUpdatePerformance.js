@@ -6,10 +6,15 @@ const scrapeGeeksForGeeksProfile = require("./geeksforgeeks");
 const scrapeLeetCodeProfile = require("./leetcode");
 const scrapeGitHubProfile = require("./github");
 
+const toNumber = (value) => {
+  const num = Number(value);
+  return Number.isFinite(num) ? num : 0;
+};
+
 async function scrapeAndUpdatePerformance(student_id, platform, username) {
   let performanceData = null;
   let attempts = 0;
-  const maxAttempts = 5;
+  const maxAttempts = 2; // Reduced from 5 for faster manual refresh
   let success = false;
 
   while (attempts < maxAttempts && !success) {
@@ -21,13 +26,14 @@ async function scrapeAndUpdatePerformance(student_id, platform, username) {
         );
         if (performanceData) {
           await db.query(
-            `UPDATE student_performance SET easy_lc = ?, medium_lc = ?, hard_lc = ?, contests_lc = ?,badges_lc=?, last_updated = NOW() WHERE student_id = ?`,
+            `UPDATE student_performance SET easy_lc = ?, medium_lc = ?, hard_lc = ?, contests_lc = ?, rating_lc = ?, badges_lc = ?, last_updated = NOW() WHERE student_id = ?`,
             [
-              performanceData?.Problems?.Easy,
-              performanceData?.Problems?.Medium,
-              performanceData?.Problems?.Hard,
-              performanceData?.Contests_Attended,
-              performanceData?.Badges,
+              toNumber(performanceData?.Problems?.Easy),
+              toNumber(performanceData?.Problems?.Medium),
+              toNumber(performanceData?.Problems?.Hard),
+              toNumber(performanceData?.Contests_Attended),
+              toNumber(performanceData?.Rating),
+              toNumber(performanceData?.Badges),
               student_id,
             ]
           );
@@ -61,12 +67,13 @@ async function scrapeAndUpdatePerformance(student_id, platform, username) {
         );
         if (performanceData) {
           await db.query(
-            `UPDATE student_performance SET contests_cc = ?, stars_cc = ?, problems_cc = ?, badges_cc = ?, last_updated = NOW() WHERE student_id = ?`,
+            `UPDATE student_performance SET contests_cc = ?, stars_cc = ?, problems_cc = ?, rating_cc = ?, badges_cc = ?, last_updated = NOW() WHERE student_id = ?`,
             [
-              performanceData?.Contests_Participated,
-              performanceData?.Star,
-              performanceData?.problemsSolved,
-              performanceData?.Badges,
+              toNumber(performanceData?.Contests_Participated),
+              toNumber(performanceData?.Star),
+              toNumber(performanceData?.problemsSolved),
+              toNumber(performanceData?.Rating),
+              toNumber(performanceData?.Badges),
               student_id,
             ]
           );
@@ -102,11 +109,11 @@ async function scrapeAndUpdatePerformance(student_id, platform, username) {
           await db.query(
             `UPDATE student_performance SET school_gfg = ?, basic_gfg = ?, easy_gfg = ?, medium_gfg = ?, hard_gfg = ?, last_updated = NOW() WHERE student_id = ?`,
             [
-              performanceData?.School,
-              performanceData?.Basic,
-              performanceData?.Easy,
-              performanceData?.Medium,
-              performanceData?.Hard,
+              toNumber(performanceData?.School),
+              toNumber(performanceData?.Basic),
+              toNumber(performanceData?.Easy),
+              toNumber(performanceData?.Medium),
+              toNumber(performanceData?.Hard),
               student_id,
             ]
           );
@@ -140,9 +147,10 @@ async function scrapeAndUpdatePerformance(student_id, platform, username) {
         );
         if (performanceData) {
           await db.query(
-            `UPDATE student_performance SET stars_hr = ?, badgesList_hr = ?, last_updated = NOW() WHERE student_id = ?`,
+            `UPDATE student_performance SET stars_hr = ?, badges_hr = ?, badgesList_hr = ?, last_updated = NOW() WHERE student_id = ?`,
             [
-              performanceData?.Total_stars || 0,
+              toNumber(performanceData?.Total_Stars),
+              toNumber(performanceData?.Total_Badges),
               JSON.stringify(performanceData?.Badges || []),
               student_id,
             ]
@@ -179,8 +187,8 @@ async function scrapeAndUpdatePerformance(student_id, platform, username) {
           await db.query(
             `UPDATE student_performance SET repos_gh = ?, contributions_gh = ?, last_updated = NOW() WHERE student_id = ?`,
             [
-              performanceData?.Public_Repos || 0,
-              performanceData?.Total_Contributions || 0,
+              toNumber(performanceData?.Public_Repos),
+              toNumber(performanceData?.Total_Contributions),
               student_id,
             ]
           );

@@ -7,6 +7,7 @@ import {
   Image,
 } from "@react-pdf/renderer";
 import logo from "/title_head.jpg";
+import { formatName, formatDepartment, formatSection } from "./textFormatter";
 
 const styles = StyleSheet.create({
   page: {
@@ -127,6 +128,16 @@ const styles = StyleSheet.create({
     marginTop: 6,
     color: "#333",
   },
+  achievementItem: {
+    fontSize: 12,
+    color: "#333",
+    marginBottom: 4,
+  },
+  achievementMeta: {
+    fontSize: 11,
+    color: "#555",
+    marginBottom: 6,
+  },
 });
 
 const PDFDocument = ({ student }) => {
@@ -135,6 +146,13 @@ const PDFDocument = ({ student }) => {
   const codechef = student?.performance?.platformWise?.codechef || {};
   const hackerrank = student?.performance?.platformWise?.hackerrank || {};
   const github = student?.performance?.platformWise?.github || {};
+  const achievements = student?.achievements || [];
+
+  const formatDate = (value) => {
+    if (!value) return "";
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? "" : date.toLocaleDateString();
+  };
 
   return (
     <Document>
@@ -147,11 +165,11 @@ const PDFDocument = ({ student }) => {
           <View style={styles.header}>
             <View style={styles.avatarContainer}>
               <Text style={styles.avatar}>
-                {student?.name?.charAt(0) || "S"}
+                {student?.name?.charAt(0).toUpperCase() || "S"}
               </Text>
             </View>
             <View style={styles.info}>
-              <Text style={styles.name}>{student?.name}</Text>
+              <Text style={styles.name}>{formatName(student?.name)}</Text>
               <Text style={styles.roll}>{student?.student_id}</Text>
             </View>
           </View>
@@ -165,11 +183,11 @@ const PDFDocument = ({ student }) => {
               <Text style={styles.tableHeader}>Degree</Text>
             </View>
             <View style={styles.tableRow}>
-              <Text style={styles.tableCell}>{student?.college || "AEC"}</Text>
-              <Text style={styles.tableCell}>{student?.section || "A"}</Text>
+              <Text style={styles.tableCell}>{formatName(student?.college) || "AEC"}</Text>
+              <Text style={styles.tableCell}>{formatSection(student?.section) || "A"}</Text>
               <Text style={styles.tableCell}>{student?.year || "3"}</Text>
               <Text style={styles.tableCell}>
-                {student?.dept_name || "AML"}
+                {formatDepartment(student?.dept_name) || "AML"}
               </Text>
               <Text style={styles.tableCell}>
                 {student?.degree || "B Tech"}
@@ -192,8 +210,8 @@ const PDFDocument = ({ student }) => {
             <Text style={styles.statLabel}>Total Contests</Text>
           </View>
           <View style={styles.statBox}>
-            <Text style={styles.statValue}>{student?.score ?? 0}</Text>
-            <Text style={styles.statLabel}>Grand Total</Text>
+            <Text style={styles.statValue}>{student?.score || 0}</Text>
+            <Text style={styles.statLabel}>Total Score</Text>
           </View>
         </View>
 
@@ -205,19 +223,20 @@ const PDFDocument = ({ student }) => {
             </Text>
             <Text style={styles.statLabel}>Problems Solved</Text>
             <Text style={styles.breakdown}>
-              Easy: {leet?.easy || 0}, Medium: {leet.medium || 0}, Hard:{" "}
-              {leet.hard || 0}, Contest: {leet.contests || 0}, Badges:{" "}
-              {leet.badges || 0}
+              Easy: {leet.easy || 0}, Medium: {leet.medium || 0}, Hard:{" "}
+              {leet.hard || 0}, Contest: {leet.contests || 0}, Rating:{" "}
+              {leet.rating || 0}, Badges: {leet.badges || 0}
             </Text>
           </View>
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>CodeChef</Text>
-            <Text style={styles.statValue}>{codechef.contests ?? 0}</Text>
-            <Text style={styles.statLabel}>Contests Participated</Text>
+            <Text style={styles.statValue}>{codechef.problems || 0}</Text>
+            <Text style={styles.statLabel}>Problems Solved</Text>
             <Text style={styles.breakdown}>
-              Problems Solved: {codechef.problems || 0}, Star:{" "}
-              {codechef.stars || 0}, Badges: {codechef.badges || 0}
+              Contests: {codechef.contests || 0}, Rating:{" "}
+              {codechef.rating || 0}, Stars: {codechef.stars || 0}, Badges:{" "}
+              {codechef.badges || 0}
             </Text>
           </View>
         </View>
@@ -241,13 +260,12 @@ const PDFDocument = ({ student }) => {
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>HackerRank</Text>
-            <Text style={styles.statValue}>{hackerrank.badges || 0}</Text>
-            <Text style={styles.statLabel}>Badges Gained</Text>
+            <Text style={styles.statValue}>{Number(hackerrank.badges || 0)}</Text>
+            <Text style={styles.statLabel}>Total Badges ({Number(hackerrank.totalStars || 0)} Stars)</Text>
             <Text style={styles.breakdown}>
-              Badges:{" "}
               {(hackerrank.badgesList || [])
-                .map((b) => `${b.name}: ${b.stars}★`)
-                .join(", ")}
+                .map((b) => `${b?.name || "Badge"}: ${Number(b?.stars || 0)} Stars`)
+                .join(", ") || "No badges yet"}
             </Text>
           </View>
         </View>
@@ -262,6 +280,27 @@ const PDFDocument = ({ student }) => {
             </Text>
           </View>
         </View>
+
+        {achievements.length > 0 && (
+          <View style={styles.statsCard}>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Achievements</Text>
+              {achievements.map((ach) => (
+                <View key={ach.id}>
+                  <Text style={styles.achievementItem}>
+                    {(ach.type || "Achievement").toUpperCase()}: {ach.title}
+                  </Text>
+                  <Text style={styles.achievementMeta}>
+                    {ach.subtype ? `${ach.subtype} • ` : ""}
+                    {formatDate(ach.date)
+                      ? `${formatDate(ach.date)}`
+                      : ""}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
       </Page>
     </Document>
   );

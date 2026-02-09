@@ -35,7 +35,6 @@ const optionList = [
 ];
 
 export default function UpdateProfileModal({ onClose, onSuccess, user }) {
-  console.log("UpdateProfileModal user:", user);
   const initialUsernames = optionList.reduce((acc, opt) => {
     acc[opt.key] = user.coding_profiles?.[`${opt.key}_id`] || "";
     return acc;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useMeta } from "../../context/MetaContext";
 import { useAuth } from "../../context/AuthContext";
 import { FaUserPlus, FaTrashAlt } from "react-icons/fa";
@@ -33,22 +33,24 @@ export default function EditModal({
   onClose,
   user, // The student being edited
   onSuccess,
-  adminView = false, // True if opened by Admin or HOD
 }) {
   const { depts, years } = useMeta();
   const { currentUser } = useAuth();
   const isManager =
     currentUser?.role === "admin" || currentUser?.role === "hod";
 
-  const savedData = {
-    name: user.name || "",
-    roll: user.student_id || "",
-    email: user.email || "",
-    year: user.year || "",
-    section: user.section || "",
-    dept_code: user.dept_code || "",
-    degree: user.degree || "",
-  };
+  const savedData = useMemo(
+    () => ({
+      name: user.name || "",
+      roll: user.student_id || "",
+      email: user.email || "",
+      year: user.year || "",
+      section: user.section || "",
+      dept_code: user.dept_code || "",
+      degree: user.degree || "",
+    }),
+    [user]
+  );
   const [form, setForm] = useState(savedData);
   const [status, setStatus] = useState({
     loading: false,
@@ -62,33 +64,37 @@ export default function EditModal({
 
   useEffect(() => {
     setForm(savedData);
-  }, [user]);
+    // Fetch sections for students when modal opens
+    if (!isManager && savedData.dept_code && savedData.year) {
+      fetchSections(savedData.dept_code, savedData.year);
+    }
+  }, [savedData, isManager]);
+
+  const fetchSections = async (deptCode, year) => {
+    if (!deptCode || !year) {
+      setSectionsList([]);
+      return;
+    }
+    setLoadingSections(true);
+    try {
+      const res = await fetch(
+        `/api/meta/sections?dept=${deptCode}&year=${year}`
+      );
+      const data = await res.json();
+      setSectionsList(data);
+    } catch (err) {
+      console.error("Failed to fetch sections", err);
+      setSectionsList([]);
+    } finally {
+      setLoadingSections(false);
+    }
+  };
 
   useEffect(() => {
-    if (form.dept_code && form.year) {
-      const fetchSectionsList = async () => {
-        setLoadingSections(true);
-        try {
-          const res = await fetch(
-            `/api/meta/sections?dept=${form.dept_code}&year=${form.year}`
-          );
-          const data = await res.json();
-          setSectionsList(data);
-          // If current section is not in new list, clear it (optional, but safer)
-          if (data.length > 0 && !data.includes(form.section?.toString())) {
-            // setForm(prev => ({ ...prev, section: "" }));
-          }
-        } catch (err) {
-          console.error("Failed to fetch sections", err);
-        } finally {
-          setLoadingSections(false);
-        }
-      };
-      fetchSectionsList();
-    } else {
-      setSectionsList([]);
+    if (isManager && form.dept_code && form.year) {
+      fetchSections(form.dept_code, form.year);
     }
-  }, [form.dept_code, form.year]);
+  }, [form.dept_code, form.year, isManager]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -135,14 +141,16 @@ export default function EditModal({
     e.preventDefault();
     setStatus({ loading: true, error: null, success: false });
 
-    // Build payload with all relevant fields for managers
+    // Build payload with all relevant fields
     const payload = { userId: user.student_id };
     if (form.name !== savedData.name) payload.name = form.name;
     if (form.email !== savedData.email) payload.email = form.email;
+    
+    // Students can now update their section
+    if (form.section != savedData.section) payload.section = form.section;
 
     if (isManager) {
       if (form.year != savedData.year) payload.year = form.year;
-      if (form.section != savedData.section) payload.section = form.section;
       if (form.degree !== savedData.degree) payload.degree = form.degree;
       if (
         currentUser.role === "admin" &&
@@ -277,6 +285,31 @@ export default function EditModal({
               placeholder="Enter email"
             />
           </div>
+
+          {/* Section field - available for all users */}
+          {!isManager && (
+            <div className="space-y-1">
+              <label className="text-sm font-semibold text-gray-600">
+                Section
+              </label>
+              <select
+                name="section"
+                value={form.section}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all bg-gray-50/50 hover:bg-white disabled:bg-gray-100 disabled:cursor-not-allowed"
+                disabled={loadingSections || !form.dept_code || !form.year}
+              >
+                <option value="">
+                  {loadingSections ? "Loading..." : "Select Section"}
+                </option>
+                {sectionsList.map((s) => (
+                  <option key={s} value={s}>
+                    Section {s}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {isManager && (
             <div className="grid grid-cols-2 gap-4">

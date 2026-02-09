@@ -5,6 +5,7 @@ import LoadingSpinner from "../../common/LoadingSpinner";
 import Footer from "../../components/Footer";
 import UserProfile from "../../components/ui/UserProfile";
 import DashboardSidebar from "../../components/DashboardSidebar";
+import { formatDepartment } from "../../utils/textFormatter";
 import {
   FiMenu,
   FiUsers,
@@ -16,6 +17,7 @@ import {
   FiBarChart2,
   FiDownload,
   FiFileText,
+  FiBriefcase,
 } from "react-icons/fi";
 import { useMeta } from "../../context/MetaContext";
 import toast from "react-hot-toast";
@@ -70,6 +72,9 @@ const AddAdminModal = lazy(() =>
 const CodingPointsReport = lazy(() =>
   import("../../components/ui/CodingPointsReport")
 );
+const PlacementEligibilityFilter = lazy(() =>
+  import("../../components/ui/PlacementEligibilityFilter")
+);
 
 const metricToPlatform = {
   stars_hr: "HackerRank",
@@ -88,12 +93,6 @@ const metricToPlatform = {
   badges_lc: "LeetCode",
   contests_lc: "LeetCode",
   contests_gfg: "GeeksforGeeks",
-  repos_gh: "GitHub",
-  contributions_gh: "GitHub",
-  certification_count: "Achievements",
-  hackathon_winner_count: "Achievements",
-  hackathon_participation_count: "Achievements",
-  workshop_count: "Achievements",
 };
 
 const platformOrder = [
@@ -120,7 +119,7 @@ function VerificationToggle() {
       const data = await res.json();
       setVerificationRequired(data.verification_required);
     } catch (err) {
-      console.error("Failed to fetch verification status");
+      console.error("Failed to fetch verification status", err);
     }
     setLoading(false);
   };
@@ -146,6 +145,7 @@ function VerificationToggle() {
       }
     } catch (err) {
       toast.error("Error updating verification setting");
+      console.error("Error updating verification setting", err);
     }
   };
 
@@ -166,11 +166,10 @@ function VerificationToggle() {
         </div>
         <button
           onClick={toggleVerification}
-          className={`px-4 py-2 rounded font-medium transition ${
-            verificationRequired
+          className={`px-4 py-2 rounded font-medium transition ${verificationRequired
               ? "bg-green-600 hover:bg-green-700 text-white"
               : "bg-red-600 hover:bg-red-700 text-white"
-          }`}
+            }`}
         >
           {verificationRequired ? "Turn OFF" : "Turn ON"}
         </button>
@@ -190,13 +189,13 @@ function AdminDashboard() {
   const [userMgmtTab, setUserMgmtTab] = useState("addBranch");
   const [changedMetrics, setChangedMetrics] = useState(new Set());
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [customFilters, setCustomFilters] = useState({
+  const [customFilters, _setCustomFilters] = useState({
     dept: "",
     year: "",
     section: "",
   });
-  const [deptWiseFilter, setDeptWiseFilter] = useState("");
-  const { depts, years, sections } = useMeta();
+  const [deptWiseFilter, _setDeptWiseFilter] = useState("");
+  const { depts: _depts, years: _years, sections: _sections } = useMeta();
 
   const menuItems = [
     { key: "Analytics", label: "Analytics Dashboard", icon: <FiBarChart2 /> },
@@ -210,6 +209,7 @@ function AdminDashboard() {
     { key: "Lifecycle", label: "Student Lifecycle", icon: <FiTrendingUp /> },
     { key: "SectionConfig", label: "Section Config", icon: <FiSettings /> },
     { key: "CodingPointsReport", label: "Points Report", icon: <FiFileText /> },
+    { key: "PlacementEligibility", label: "Placement Eligibility Filter", icon: <FiBriefcase /> },
     { key: "ExportData", label: "Export Data", icon: <FiDownload /> },
     ...(currentUser.user_id === "SA07" || currentUser.user_id === "ADMIN"
       ? [{ key: "AdminList", label: "Admin List", icon: <FiUserCheck /> }]
@@ -234,12 +234,6 @@ function AdminDashboard() {
     medium_lc: "LeetCode Medium",
     badges_lc: "LeetCode Badges",
     contests_lc: "LeetCode Contests",
-    repos_gh: "GitHub Repositories",
-    contributions_gh: "GitHub Contributions",
-    certification_count: "Certifications",
-    hackathon_winner_count: "Hackathon - Winner",
-    hackathon_participation_count: "Hackathon - Participation",
-    workshop_count: "Workshops",
   };
 
   useEffect(() => {
@@ -268,6 +262,7 @@ function AdminDashboard() {
         const data = await res.json();
         setGrading(data.grading || []);
       } catch (err) {
+        console.error("Failed to load grading config", err);
         alert("Failed to load grading config");
         setGrading([]);
       }
@@ -322,7 +317,7 @@ function AdminDashboard() {
     return grouped;
   }, [grading]);
 
-  const handleDownload = async (type) => {
+  const _handleDownload = async (type) => {
     try {
       toast.loading("Preparing download...");
       let url = `/api/download/${type}`;
@@ -358,10 +353,10 @@ function AdminDashboard() {
 
       toast.dismiss();
       toast.success("Download completed!");
-    } catch (error) {
+    } catch (_error) {
       toast.dismiss();
       toast.error("Download failed. Please try again.");
-      console.error("Download error:", error);
+      console.error("Download error:", _error);
     }
   };
 
@@ -458,7 +453,7 @@ function AdminDashboard() {
                   {currentUser.students_per_dept.map((dept) => (
                     <div className="bg-white p-4 rounded-lg shadow">
                       <h2 className="text-gray-500 text-lg">
-                        {dept.dept_name}
+                        {formatDepartment(dept.dept_name)}
                       </h2>
                       <p className="text-xl font-bold">
                         {dept.student_count || 0}
@@ -614,6 +609,13 @@ function AdminDashboard() {
               </Suspense>
             )}
 
+            {/* Placement Eligibility Filter */}
+            {selectedTab === "PlacementEligibility" && (
+              <Suspense fallback={<LoadingSpinner />}>
+                <PlacementEligibilityFilter />
+              </Suspense>
+            )}
+
             {/* Admin List - SA07 only */}
             {selectedTab === "AdminList" && currentUser.user_id === "SA07" && (
               <Suspense fallback={<LoadingSpinner />}>
@@ -645,11 +647,10 @@ function AdminDashboard() {
                       ].map((item) => (
                         <li key={item.key}>
                           <button
-                            className={`w-full text-left px-3 py-2 rounded transition ${
-                              userMgmtTab === item.key
+                            className={`w-full text-left px-3 py-2 rounded transition ${userMgmtTab === item.key
                                 ? "bg-blue-600 text-white"
                                 : "hover:bg-blue-100"
-                            }`}
+                              }`}
                             onClick={() => setUserMgmtTab(item.key)}
                           >
                             {item.label}

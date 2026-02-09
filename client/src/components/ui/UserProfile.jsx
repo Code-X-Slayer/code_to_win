@@ -1,5 +1,6 @@
 import React from 'react'
 import { FaUser } from 'react-icons/fa';
+import { formatName, formatDepartment, formatSection } from '../../utils/textFormatter';
 
 function UserProfile({ user }) {
 
@@ -10,13 +11,13 @@ function UserProfile({ user }) {
           <FaUser className="text-white text-2xl" />
         </div>
         <div className="flex flex-col items-center md:items-start">
-          <div className="text-xl font-semibold">{user?.name}</div>
+          <div className="text-xl font-semibold">{formatName(user?.name)}</div>
           <div className="text-base">{user?.email}</div>
           <div className="mt-1">
             {user.dept_name &&
               <span className="text-base bg-blue-500 font-semibold text-white px-2 py-1 rounded-full">
-                {user?.dept_name}  {user?.year ? " " + " - " + user.year : ""}
-                {user?.section ? "" + " - " + user.section : ""}
+                {formatDepartment(user?.dept_name)}  {user?.year ? " " + " - " + user.year : ""}
+                {user?.section ? "" + " - " + formatSection(user.section) : ""}
               </span>}
           </div>
         </div>

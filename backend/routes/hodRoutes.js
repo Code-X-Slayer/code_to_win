@@ -148,6 +148,7 @@ router.get("/students", async (req, res) => {
         const combined = {
           totalSolved: totalSolved,
           totalContests:
+            (isLeetcodeAccepted ? p.contests_lc : 0) +
             (isCodechefAccepted ? p.contests_cc : 0) +
             (isGfgAccepted ? p.contests_gfg : 0),
           stars_cc: isCodechefAccepted ? p.stars_cc : 0,
@@ -160,6 +161,9 @@ router.get("/students", async (req, res) => {
             easy: isLeetcodeAccepted ? p.easy_lc : 0,
             medium: isLeetcodeAccepted ? p.medium_lc : 0,
             hard: isLeetcodeAccepted ? p.hard_lc : 0,
+            contests: isLeetcodeAccepted ? p.contests_lc : 0,
+            rating: isLeetcodeAccepted ? p.rating_lc : 0,
+            badges: isLeetcodeAccepted ? p.badges_lc : 0,
           },
           gfg: {
             school: isGfgAccepted ? p.school_gfg : 0,
@@ -172,10 +176,15 @@ router.get("/students", async (req, res) => {
           codechef: {
             problems: isCodechefAccepted ? p.problems_cc : 0,
             contests: isCodechefAccepted ? p.contests_cc : 0,
+            rating: isCodechefAccepted ? p.rating_cc : 0,
             stars: isCodechefAccepted ? p.stars_cc : 0,
+            badges: isCodechefAccepted ? p.badges_cc : 0,
           },
           hackerrank: {
-            badges: isHackerrankAccepted ? p.stars_hr : 0,
+            badges: isHackerrankAccepted 
+              ? (p.badges_hr || JSON.parse(p.badgesList_hr || "[]").length)
+              : 0,
+            totalStars: isHackerrankAccepted ? p.stars_hr : 0,
             badgesList: isHackerrankAccepted
               ? JSON.parse(p.badgesList_hr || "[]")
               : [],
@@ -184,18 +193,18 @@ router.get("/students", async (req, res) => {
             repos: isGithubAccepted ? p.repos_gh : 0,
             contributions: isGithubAccepted ? p.contributions_gh : 0,
           },
-          achievements: {
-            certifications: p.certification_count || 0,
-            hackathon_winners: p.hackathon_winner_count || 0,
-            hackathon_participation: p.hackathon_participation_count || 0,
-            workshops: p.workshop_count || 0,
-          },
         };
+
+        const [achievementRows] = await db.query(
+          "SELECT id, student_id, achievement_type AS type, subtype, title, date, description, proof_url AS file_path, created_at, updated_at FROM student_achievements WHERE student_id = ? ORDER BY FIELD(achievement_type, 'certification', 'hackathon', 'workshop')",
+          [student.student_id]
+        );
 
         student.performance = {
           combined,
           platformWise,
         };
+        student.achievements = achievementRows;
       }
     }
 

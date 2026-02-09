@@ -364,7 +364,7 @@ router.get("/custom", async (req, res) => {
       "Last Updated": d.last_updated || "N/A",
     }));
 
-    console.log("Final check", data);
+    logger.info("Final check", data);
 
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.json_to_sheet(excelData);

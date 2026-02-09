@@ -1,4 +1,5 @@
 import * as XLSX from "xlsx";
+import { formatName, formatDepartment, formatSection } from "./textFormatter";
 
 // Helper to access nested properties safely
 const getNestedValue = (obj, path) => {
@@ -15,20 +16,22 @@ export const exportStudentsToExcel = (students, filename = "students") => {
   const excelData = students.map((student, i) => ({
     "S.No": i + 1,
     "Student ID": student.student_id,
-    Name: student.name,
-    Department: student.dept_name,
+    Name: formatName(student.name),
+    Department: formatDepartment(student.dept_name),
     Year: student.year,
-    Section: student.section,
+    Section: formatSection(student.section),
     Degree: student.degree,
     Score: student.score || 0,
     "University Rank": student.overall_rank || "N/A",
     "Total Problems": student.performance?.combined?.totalSolved || 0,
     "Total Contests": student.performance?.combined?.totalContests || 0,
-    "HackerRank Badges": (
+    "HackerRank Badges": Number(student.performance?.platformWise?.hackerrank?.badges || 0),
+    "HackerRank Stars": Number(student.performance?.platformWise?.hackerrank?.totalStars || 0),
+    "HackerRank Details": (
       student.performance?.platformWise?.hackerrank?.badgesList || []
     )
-      .map((b) => `${b.name}: ${b.stars}★`)
-      .join(", "),
+      .map((b) => `${b.name}: ${Number(b.stars || 0)} Stars`)
+      .join(", ") || "No badges",
     "GitHub Repos": student.performance?.platformWise?.github?.repos || 0,
     "GitHub Contribs":
       student.performance?.platformWise?.github?.contributions || 0,

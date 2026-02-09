@@ -48,6 +48,15 @@ const developers = [
     linkedin: "https://www.linkedin.com/in/nareen-kumar-mangam-0aaa11254",
     image: "/nareen_hidden.png", // replace with actual image
   },
+   {
+  name: "Rama Lokesh Reddy Penumallu",
+  role: "Full Stack Developer",
+  description:
+    "Enhances application workflows and ensures smooth frontend–backend integration using JavaScript, React, and Node.js.",
+  github: "https://github.com/ramalokeshreddyp",
+  linkedin: "https://www.linkedin.com/in/rama-lokesh-reddy/",
+  image: "https://github.com/ramalokeshreddyp.png",
+},
 ];
 
 const Dev = () => {

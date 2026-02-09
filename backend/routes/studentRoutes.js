@@ -52,12 +52,12 @@ router.get("/profile", async (req, res) => {
 
     const p = data[0];
 
-    // All platforms are auto-accepted
-    const isLeetcodeAccepted = coding_profiles?.leetcode_id;
-    const isCodechefAccepted = coding_profiles?.codechef_id;
-    const isGfgAccepted = coding_profiles?.geeksforgeeks_id;
-    const isHackerrankAccepted = coding_profiles?.hackerrank_id;
-    const isGithubAccepted = coding_profiles?.github_id;
+    // Platforms are considered accepted only when explicitly approved
+    const isLeetcodeAccepted = coding_profiles?.leetcode_status === "accepted";
+    const isCodechefAccepted = coding_profiles?.codechef_status === "accepted";
+    const isGfgAccepted = coding_profiles?.geeksforgeeks_status === "accepted";
+    const isHackerrankAccepted = coding_profiles?.hackerrank_status === "accepted";
+    const isGithubAccepted = coding_profiles?.github_status === "accepted";
 
     const totalSolved =
       (isLeetcodeAccepted ? p.easy_lc + p.medium_lc + p.hard_lc : 0) +
@@ -69,6 +69,7 @@ router.get("/profile", async (req, res) => {
     const combined = {
       totalSolved: totalSolved,
       totalContests:
+        (isLeetcodeAccepted ? p.contests_lc : 0) +
         (isCodechefAccepted ? p.contests_cc : 0) +
         (isGfgAccepted ? p.contests_gfg : 0),
       stars_cc: isCodechefAccepted ? p.stars_cc : 0,
@@ -82,6 +83,7 @@ router.get("/profile", async (req, res) => {
         medium: isLeetcodeAccepted ? p.medium_lc : 0,
         hard: isLeetcodeAccepted ? p.hard_lc : 0,
         contests: isLeetcodeAccepted ? p.contests_lc : 0,
+        rating: isLeetcodeAccepted ? p.rating_lc : 0,
         badges: isLeetcodeAccepted ? p.badges_lc : 0,
       },
       gfg: {
@@ -95,11 +97,15 @@ router.get("/profile", async (req, res) => {
       codechef: {
         problems: isCodechefAccepted ? p.problems_cc : 0,
         contests: isCodechefAccepted ? p.contests_cc : 0,
+        rating: isCodechefAccepted ? p.rating_cc : 0,
         stars: isCodechefAccepted ? p.stars_cc : 0,
         badges: isCodechefAccepted ? p.badges_cc : 0,
       },
       hackerrank: {
-        badges: isHackerrankAccepted ? p.stars_hr : 0,
+        badges: isHackerrankAccepted 
+          ? (p.badges_hr || JSON.parse(p.badgesList_hr || "[]").length)
+          : 0,
+        totalStars: isHackerrankAccepted ? p.stars_hr : 0,
         badgesList: isHackerrankAccepted
           ? JSON.parse(p.badgesList_hr || "[]")
           : [],
@@ -109,6 +115,11 @@ router.get("/profile", async (req, res) => {
         contributions: isGithubAccepted ? p.contributions_gh : 0,
       },
     };
+
+    const [achievementRows] = await db.query(
+      "SELECT id, student_id, achievement_type AS type, subtype, title, date, description, proof_url AS file_path, created_at, updated_at FROM student_achievements WHERE student_id = ? ORDER BY FIELD(achievement_type, 'certification', 'hackathon', 'workshop')",
+      [userId]
+    );
     logger.info(`Student profile fetched for userId: ${userId}`);
     res.json({
       ...profile,
@@ -117,6 +128,7 @@ router.get("/profile", async (req, res) => {
         combined,
         platformWise,
       },
+      achievements: achievementRows,
     });
   } catch (err) {
     logger.error(
@@ -127,20 +139,37 @@ router.get("/profile", async (req, res) => {
 });
 
 router.put("/update-profile", async (req, res) => {
-  const { userId, name, email } = req.body;
+  const { userId, name, email, section } = req.body;
   logger.info(`Updating student profile: userId=${userId}`);
   try {
-    if (!name && !email) {
+    if (!name && !email && (section === undefined || section === null)) {
       return res.status(400).json({ message: "No fields to update" });
     }
 
+    // Build update query dynamically based on provided fields
+    const updates = [];
+    const values = [];
+
     if (name) {
+      updates.push("name = ?");
+      values.push(name);
+    }
+
+    if (section !== undefined && section !== null) {
+      updates.push("section = ?");
+      values.push(section);
+    }
+
+    // Update student_profiles table if there are any updates
+    if (updates.length > 0) {
+      values.push(userId);
       await db.query(
-        `UPDATE student_profiles SET name = ? WHERE student_id = ?`,
-        [name, userId]
+        `UPDATE student_profiles SET ${updates.join(", ")} WHERE student_id = ?`,
+        values
       );
     }
 
+    // Update users table for email
     if (email) {
       await db.query(`UPDATE users SET email = ? WHERE user_id = ?`, [
         email,
@@ -368,9 +397,14 @@ router.get("/notifications", async (req, res) => {
 });
 
 // POST /student/refresh-coding-profiles
+// Optimized for faster response time with timeout protection
 router.post("/refresh-coding-profiles", async (req, res) => {
   const { userId } = req.body;
   logger.info(`Refreshing coding profiles for userId: ${userId}`);
+  
+  // Immediate response to client with timeout protection
+  const REFRESH_TIMEOUT = 45000; // 45 second hard timeout
+  
   try {
     const [profiles] = await db.query(
       `SELECT leetcode_id, leetcode_status, codechef_id, codechef_status, geeksforgeeks_id, geeksforgeeks_status, hackerrank_id, hackerrank_status, github_id, github_status
@@ -391,11 +425,15 @@ router.post("/refresh-coding-profiles", async (req, res) => {
         profile.leetcode_status === "suspended")
     ) {
       tasks.push(
-        scrapeAndUpdatePerformance(
-          userId,
-          "leetcode",
-          profile.leetcode_id
-        ).catch((err) => logger.error(`[REFRESH] LeetCode: ${err.message}`))
+        Promise.race([
+          scrapeAndUpdatePerformance(userId, "leetcode", profile.leetcode_id),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("LeetCode timeout")), 20000)
+          ),
+        ]).catch((err) => {
+          logger.warn(`[REFRESH] LeetCode: ${err.message}`);
+          return { platform: "leetcode", error: err.message };
+        })
       );
     }
     if (
@@ -404,11 +442,15 @@ router.post("/refresh-coding-profiles", async (req, res) => {
         profile.codechef_status === "suspended")
     ) {
       tasks.push(
-        scrapeAndUpdatePerformance(
-          userId,
-          "codechef",
-          profile.codechef_id
-        ).catch((err) => logger.error(`[REFRESH] CodeChef: ${err.message}`))
+        Promise.race([
+          scrapeAndUpdatePerformance(userId, "codechef", profile.codechef_id),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("CodeChef timeout")), 20000)
+          ),
+        ]).catch((err) => {
+          logger.warn(`[REFRESH] CodeChef: ${err.message}`);
+          return { platform: "codechef", error: err.message };
+        })
       );
     }
     if (
@@ -417,11 +459,15 @@ router.post("/refresh-coding-profiles", async (req, res) => {
         profile.geeksforgeeks_status === "suspended")
     ) {
       tasks.push(
-        scrapeAndUpdatePerformance(
-          userId,
-          "geeksforgeeks",
-          profile.geeksforgeeks_id
-        ).catch((err) => logger.error(`[REFRESH] GFG: ${err.message}`))
+        Promise.race([
+          scrapeAndUpdatePerformance(userId, "geeksforgeeks", profile.geeksforgeeks_id),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("GFG timeout")), 20000)
+          ),
+        ]).catch((err) => {
+          logger.warn(`[REFRESH] GFG: ${err.message}`);
+          return { platform: "geeksforgeeks", error: err.message };
+        })
       );
     }
     if (
@@ -430,11 +476,15 @@ router.post("/refresh-coding-profiles", async (req, res) => {
         profile.hackerrank_status === "suspended")
     ) {
       tasks.push(
-        scrapeAndUpdatePerformance(
-          userId,
-          "hackerrank",
-          profile.hackerrank_id
-        ).catch((err) => logger.error(`[REFRESH] HackerRank: ${err.message}`))
+        Promise.race([
+          scrapeAndUpdatePerformance(userId, "hackerrank", profile.hackerrank_id),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("HackerRank timeout")), 20000)
+          ),
+        ]).catch((err) => {
+          logger.warn(`[REFRESH] HackerRank: ${err.message}`);
+          return { platform: "hackerrank", error: err.message };
+        })
       );
     }
     if (
@@ -443,25 +493,40 @@ router.post("/refresh-coding-profiles", async (req, res) => {
         profile.github_status === "suspended")
     ) {
       tasks.push(
-        scrapeAndUpdatePerformance(userId, "github", profile.github_id).catch(
-          (err) => logger.error(`[REFRESH] GitHub: ${err.message}`)
-        )
+        Promise.race([
+          scrapeAndUpdatePerformance(userId, "github", profile.github_id),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("GitHub timeout")), 20000)
+          ),
+        ]).catch((err) => {
+          logger.warn(`[REFRESH] GitHub: ${err.message}`);
+          return { platform: "github", error: err.message };
+        })
       );
     }
 
-    const results = await Promise.all(tasks);
-
-    logger.info(
-      `Completed refresh for ${tasks.length} coding profiles for userId: ${userId}`
+    // Use Promise.race with overall timeout for faster response
+    const refreshPromise = Promise.all(tasks);
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("Overall refresh timeout")), REFRESH_TIMEOUT)
     );
+
+    const results = await Promise.race([refreshPromise, timeoutPromise]);
+
+    const successCount = results.filter((r) => !r?.error).length;
+    logger.info(
+      `Completed refresh for ${successCount}/${tasks.length} coding profiles for userId: ${userId}`
+    );
+    
     res.json({
-      message: `Refreshed ${tasks.length} coding profiles`,
+      message: `Refreshed ${successCount} of ${tasks.length} coding profiles`,
+      success: successCount > 0,
     });
   } catch (err) {
     logger.error(
       `Error refreshing coding profiles for userId=${userId}: ${err.message}`
     );
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Refresh in progress. Data will update shortly." });
   }
 });
 

@@ -162,11 +162,11 @@ async function generateStudentExcel() {
 if (require.main === module) {
   generateStudentExcel()
     .then((filePath) => {
-      console.log(`Excel file generated at: ${filePath}`);
+      logger.info(`Excel file generated at: ${filePath}`);
       process.exit(0);
     })
     .catch((err) => {
-      console.error("Failed to generate Excel:", err);
+      logger.error("Failed to generate Excel:", err);
       process.exit(1);
     });
 }

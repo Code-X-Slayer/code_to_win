@@ -37,6 +37,7 @@ const BatchSectionConfig = () => {
       });
       setLocalConfigs(local);
     } catch (err) {
+      console.error("Failed to load batch configurations", err);
       toast.error("Failed to load batch configurations");
     }
     setLoading(false);
@@ -93,6 +94,7 @@ const BatchSectionConfig = () => {
       toast.success("All changes saved successfully");
       fetchConfigs();
     } catch (err) {
+      console.error("Error saving configurations", err);
       toast.error("Error saving configurations");
     }
     setSaving(false);

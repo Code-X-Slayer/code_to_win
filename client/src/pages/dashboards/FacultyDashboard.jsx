@@ -46,9 +46,6 @@ const StudentTable = lazy(() => import("../../components/ui/StudentTable"));
 const BulkImportWithCP = lazy(() =>
   import("../../components/ui/BulkImportWithCP")
 );
-const FacultyApprovals = lazy(() =>
-  import("../../components/ui/FacultyApprovals")
-);
 const AdvancedExport = lazy(() => import("../../components/ui/AdvancedExport"));
 
 function FacultyDashboard() {
@@ -376,20 +373,6 @@ function FacultyDashboard() {
                         </Suspense>
                       </div>
 
-                      {/* Section 2: Achievement Approvals */}
-                      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                        <h2 className="text-xl font-bold text-gray-800 mb-2">
-                          Achievement Approvals
-                        </h2>
-                        <p className="text-gray-500 text-sm mb-6">
-                          Review and approve student achievement submissions
-                        </p>
-                        <Suspense fallback={<LoadingSpinner />}>
-                          <FacultyApprovals
-                            facultyId={currentUser?.faculty_id}
-                          />
-                        </Suspense>
-                      </div>
                     </div>
                   )}
 

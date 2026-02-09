@@ -25,20 +25,8 @@ const STUDENT_FIELD_GROUPS = {
   ],
   Achievements: [
     {
-      key: "performance.platformWise.achievements.certifications",
-      label: "Certifications",
-    },
-    {
-      key: "performance.platformWise.achievements.hackathon_winners",
-      label: "Hackathon Winners",
-    },
-    {
-      key: "performance.platformWise.achievements.hackathon_participation",
-      label: "Hackathon Participation",
-    },
-    {
-      key: "performance.platformWise.achievements.workshops",
-      label: "Workshops",
+      key: "achievements",
+      label: "Achievements Data",
     },
   ],
   "Performance Summary": [
@@ -93,8 +81,6 @@ const HOD_FIELD_GROUPS = {
 const AdvancedExport = ({
   students,
   filenamePrefix = "custom_export",
-  onExportFaculty, // Keeping specifically as fallback or alternative if passed
-  onExportHOD,
   fetchFacultyData, // New prop to fetch JSON data
   fetchHODData, // New prop to fetch JSON data
 }) => {
@@ -155,7 +141,7 @@ const AdvancedExport = ({
   };
 
   /* New Props: enableStaffExport, onExportFaculty, onExportHOD */
-  const { depts: allDepts, years: allYears, sections: allSections } = useMeta();
+  const { depts: allDepts, years: _allYears, sections: _allSections } = useMeta();
   const [filters, setFilters] = useState({
     dept: "",
     year: "",

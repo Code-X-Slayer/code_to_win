@@ -8,6 +8,7 @@ const PlatformCard = ({
   ani,
   breakdown,
   subtitle = "Problems Solved",
+  label = "",
 }) => (
   <div
     className={`bg-white p-6 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 w-full group ${color}`}
@@ -28,7 +29,7 @@ const PlatformCard = ({
     </div>
 
     <div className="text-4xl font-extrabold text-gray-900 mb-4 tracking-tight">
-      {total}
+      {total} {label && <span className="text-lg text-gray-600 font-semibold">{label}</span>}
     </div>
 
     {breakdown && (
@@ -47,4 +48,4 @@ const PlatformCard = ({
   </div>
 );
 
-export default PlatformCard;
+export default React.memo(PlatformCard);

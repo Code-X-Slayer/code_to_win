@@ -8,9 +8,10 @@ import {
 } from "react-icons/fi";
 import { useMeta } from "../../context/MetaContext";
 import axios from "axios";
+import { formatName, formatSection } from "../../utils/textFormatter";
 
 const LifecycleManagement = ({ fixedDept = "" }) => {
-  const { depts, years } = useMeta();
+  const { depts, years: _years } = useMeta();
   const [selectedDept, setSelectedDept] = useState(fixedDept || "");
   const [promoteFromYear, setPromoteFromYear] = useState("");
   const [loading, setLoading] = useState(false);
@@ -152,8 +153,8 @@ const LifecycleManagement = ({ fixedDept = "" }) => {
                   <td className="px-4 py-2 font-medium text-gray-900">
                     {s.student_id}
                   </td>
-                  <td className="px-4 py-2 text-gray-600">{s.name}</td>
-                  <td className="px-4 py-2 text-gray-600">{s.section}</td>
+                  <td className="px-4 py-2 text-gray-600">{formatName(s.name)}</td>
+                  <td className="px-4 py-2 text-gray-600">{formatSection(s.section)}</td>
                 </tr>
               ))
             ) : (

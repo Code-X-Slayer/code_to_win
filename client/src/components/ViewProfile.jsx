@@ -8,11 +8,38 @@ import PDFDocument from "../utils/PDFDocument";
 
 const ViewProfile = ({ student, onClose }) => {
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [achievements, setAchievements] = useState(student?.achievements || []);
+
+  useEffect(() => {
+    setAchievements(student?.achievements || []);
+  }, [student]);
+
+  useEffect(() => {
+    const fetchAchievements = async () => {
+      if (!student?.student_id || (student?.achievements || []).length > 0) {
+        return;
+      }
+      try {
+        const res = await fetch(
+          `/api/achievements/my-achievements?studentId=${student.student_id}`
+        );
+        if (res.ok) {
+          const data = await res.json();
+          setAchievements(data);
+        }
+      } catch (error) {
+        console.error("Error fetching achievements:", error);
+      }
+    };
+
+    fetchAchievements();
+  }, [student]);
 
   const handleDownloadPDF = async () => {
     setIsGeneratingPDF(true);
     try {
-      const blob = await pdf(<PDFDocument student={student} />).toBlob();
+      const profileStudent = { ...student, achievements };
+      const blob = await pdf(<PDFDocument student={profileStudent} />).toBlob();
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -30,7 +57,7 @@ const ViewProfile = ({ student, onClose }) => {
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-70 flex items-start justify-center h-screen overflow-scroll bg-[#00000055]  "
+      className="fixed inset-0 z-70 flex items-start justify-center h-screen overflow-scroll bg-[#00000055]"
     >
       <div
         className="bg-[#f7f7f7] rounded-xl space-y-4 p-6 w-full flex flex-col items-center max-w-3xl shadow-lg relative"
@@ -94,7 +121,7 @@ const ViewProfile = ({ student, onClose }) => {
             />
           </div>
           {/* Platform-wise Stats */}
-          <div className="grid grid-cols-2  gap-2 md:gap-6 w-full">
+          <div className="grid grid-cols-2 gap-2 md:gap-6 w-full">
             <PlatformCard
               name="LeetCode"
               icon="/LeetCode_logo.png"
@@ -110,6 +137,7 @@ const ViewProfile = ({ student, onClose }) => {
                 Hard: student?.performance?.platformWise?.leetcode?.hard,
                 Contests:
                   student?.performance?.platformWise?.leetcode?.contests,
+                Rating: student?.performance?.platformWise?.leetcode?.rating,
                 Badges: student?.performance?.platformWise?.leetcode?.badges,
               }}
             />
@@ -117,11 +145,12 @@ const ViewProfile = ({ student, onClose }) => {
               name="CodeChef"
               icon="/codechef_logo.png"
               color=" hover:text-[#a92700] hover:shadow-[#a92700]"
-              total={student?.performance?.platformWise?.codechef?.contests}
-              subtitle="Contests Participated"
+              total={student?.performance?.platformWise?.codechef?.problems}
+              subtitle="Problems Solved"
               breakdown={{
-                "problems Solved":
-                  student?.performance?.platformWise?.codechef?.problems,
+                Contests:
+                  student?.performance?.platformWise?.codechef?.contests,
+                Rating: student?.performance?.platformWise?.codechef?.rating,
                 Stars: student?.performance?.platformWise?.codechef?.stars,
                 Badges: student?.performance?.platformWise?.codechef?.badges,
               }}
@@ -149,16 +178,15 @@ const ViewProfile = ({ student, onClose }) => {
               name="HackerRank"
               icon="/HackerRank_logo.png"
               color=" hover:text-black hover:shadow-black"
-              total={student?.performance?.platformWise?.hackerrank?.badges}
-              subtitle="Badges Gained"
-              breakdown={{
-                Badges: (
-                  student?.performance?.platformWise?.hackerrank?.badgesList ||
-                  []
-                )
-                  .map((badge) => `${badge.name}: ${badge.stars}★`)
-                  .join(", "),
-              }}
+              total={student?.performance?.platformWise?.hackerrank?.badges || 0}
+              label="Badges"
+              subtitle={`${student?.performance?.platformWise?.hackerrank?.totalStars || 0} Total Stars`}
+              breakdown={(
+                student?.performance?.platformWise?.hackerrank?.badgesList || []
+              ).reduce((acc, badge) => {
+                acc[badge.name] = `${badge.stars}⭐`;
+                return acc;
+              }, {})}
             />
             {student?.performance?.platformWise?.github?.repos > 0 && (
               <PlatformCard
@@ -174,6 +202,54 @@ const ViewProfile = ({ student, onClose }) => {
               />
             )}
           </div>
+
+          {achievements.length > 0 && (
+            <div className="w-full bg-white rounded-2xl shadow-sm p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">
+                Achievements
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {achievements.map((ach) => (
+                  <div
+                    key={ach.id}
+                    className="border border-gray-100 rounded-xl p-4 bg-gray-50"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-semibold uppercase tracking-wide text-blue-600">
+                        {ach.type}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        {ach.date
+                          ? new Date(ach.date).toLocaleDateString()
+                          : ""}
+                      </span>
+                    </div>
+                    <div className="text-sm font-semibold text-gray-900">
+                      {ach.title}
+                    </div>
+                    <div className="text-xs text-gray-500 mb-2">
+                      {ach.subtype ? ach.subtype : ""}
+                    </div>
+                    {ach.description && (
+                      <p className="text-xs text-gray-600 mb-2">
+                        {ach.description}
+                      </p>
+                    )}
+                    {ach.file_path && (
+                      <a
+                        href={ach.file_path}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-blue-600 hover:underline"
+                      >
+                        View Proof
+                      </a>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Download Button */}
@@ -188,7 +264,7 @@ const ViewProfile = ({ student, onClose }) => {
         {/* X Close Button */}
         <button
           onClick={onClose}
-          className=" absolute top-7 right-4 cursor-pointer rounded-xl px-4 py-1 text-[#ffffff] hover:text-gray-800 text-3xl font-bold focus:outline-none"
+          className="absolute top-7 right-4 cursor-pointer rounded-xl px-4 py-1 text-[#ffffff] hover:text-gray-800 text-3xl font-bold focus:outline-none"
           aria-label="Close"
         >
           <IoCloseCircle />

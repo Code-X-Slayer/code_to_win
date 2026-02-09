@@ -3,6 +3,7 @@ const router = express.Router();
 const path = require("path");
 const fs = require("fs");
 const generateStudentExcel = require("../generateStudentExcel");
+const generatePlacementExcel = require("../generatePlacementExcel");
 const { logger } = require("../utils");
 
 // Generate Excel file with student data
@@ -94,6 +95,49 @@ router.get("/download/:filename", (req, res) => {
     res
       .status(500)
       .json({ message: "Failed to download file", error: error.message });
+  }
+});
+
+// Generate Excel file for placement eligibility
+router.post("/placement-excel", async (req, res) => {
+  try {
+    logger.info("Placement Excel export requested");
+    const { companyName, filters, eligibleStudents } = req.body;
+
+    if (!companyName || !eligibleStudents) {
+      return res.status(400).json({
+        message: "Company name and eligible students data are required",
+      });
+    }
+
+    const filePath = await generatePlacementExcel({
+      companyName,
+      filters,
+      eligibleStudents,
+    });
+
+    // Get filename from path
+    const fileName = path.basename(filePath);
+
+    // Set headers for file download
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
+    res.setHeader("Access-Control-Expose-Headers", "Content-Disposition");
+
+    // Stream the file
+    const fileStream = fs.createReadStream(filePath);
+    fileStream.pipe(res);
+
+    logger.info(`Placement Excel file ${fileName} sent to client`);
+  } catch (error) {
+    logger.error(`Error generating placement Excel: ${error.message}`);
+    res.status(500).json({
+      message: "Failed to generate placement Excel file",
+      error: error.message,
+    });
   }
 });
 

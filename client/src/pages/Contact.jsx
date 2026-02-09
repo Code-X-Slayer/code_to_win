@@ -11,19 +11,6 @@ const ContactUs = () => {
     error: null,
   });
 
-  const faqs = [
-    {
-      question: "How is the score calculated?",
-      answer:
-        "The score is calculated based on problem difficulty, with harder problems weighted more heavily. We also consider contest participation and platform-specific ratings.",
-    },
-    {
-      question: "How often is the data updated?",
-      answer:
-        "The data is updated whenever new profiles are uploaded by administrators. Student performance data syncs weekly.",
-    },
-  ];
-
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -68,6 +55,7 @@ const ContactUs = () => {
         });
       }
     } catch (error) {
+      console.error("Contact form error:", error);
       setStatus({
         loading: false,
         success: null,

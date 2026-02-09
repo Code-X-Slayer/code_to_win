@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   FiCheck,
   FiX,
@@ -15,7 +15,7 @@ const FacultyApprovals = ({ facultyId }) => {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(null);
 
-  const fetchRequests = async () => {
+  const fetchRequests = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch(
@@ -30,11 +30,11 @@ const FacultyApprovals = ({ facultyId }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [facultyId]);
 
   useEffect(() => {
     fetchRequests();
-  }, [facultyId]);
+  }, [fetchRequests]);
 
   const handleAction = async (id, action) => {
     let rejectionReason = "";
@@ -67,6 +67,7 @@ const FacultyApprovals = ({ facultyId }) => {
         toast.error(data.message || "Action failed");
       }
     } catch (err) {
+      console.error("Action failed:", err);
       toast.error("Server error");
     } finally {
       setProcessing(null);

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, lazy, Suspense } from "react";
+import React, { useEffect, useState, lazy, Suspense, useCallback } from "react";
 import { FaSearch } from "react-icons/fa";
 import { useAuth } from "../../context/AuthContext";
 import Navbar from "../../components/Navbar";
@@ -540,7 +540,7 @@ function HeadDashboard() {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [students, setStudents] = useState([]);
   const [facultyList, setFacultyList] = useState([]);
-  const { years, sections } = useMeta();
+  const { years, sections: _sections } = useMeta();
   const [filterYear, setFilterYear] = useState("");
   const [filterSection, setFilterSection] = useState("");
   const [search, setSearch] = useState("");
@@ -557,7 +557,7 @@ function HeadDashboard() {
     { key: "More", label: "More Actions", icon: <FiUserPlus /> },
   ];
 
-  const fetchFaculty = async () => {
+  const fetchFaculty = useCallback(async () => {
     try {
       const { data } = await axios.get(
         `/api/hod/faculty?dept=${currentUser.dept_code}`
@@ -566,9 +566,9 @@ function HeadDashboard() {
     } catch (error) {
       console.error("Error fetching faculty:", error);
     }
-  };
+  }, [currentUser.dept_code]);
 
-  const fetchStudents = async () => {
+  const fetchStudents = useCallback(async () => {
     try {
       const { data } = await axios.get("/api/hod/students", {
         params: {
@@ -581,14 +581,14 @@ function HeadDashboard() {
     } catch (error) {
       console.error("Error fetching students:", error);
     }
-  };
+  }, [currentUser.dept_code, filterYear, filterSection]);
 
   useEffect(() => {
     fetchStudents();
     if (currentUser.dept_code) {
       fetchFaculty();
     }
-  }, [filterYear, filterSection, currentUser.dept_code]);
+  }, [fetchStudents, fetchFaculty, currentUser.dept_code]);
 
   const filteredStudents = students?.filter(
     (student) =>

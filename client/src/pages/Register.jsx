@@ -21,8 +21,46 @@ import { useMeta } from "../context/MetaContext";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
+// InputWrapper component - moved outside to prevent re-creation on each render
+const InputWrapper = ({ icon, label, children }) => {
+  const IconComponent = icon;
+  return (
+    <div className="mb-5">
+      <label className="block text-sm font-semibold text-gray-700 mb-1.5 ml-1">
+        {label}
+      </label>
+      <div className="relative">
+        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+          <IconComponent size={18} />
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+};
+
+// Animation variants - moved outside to prevent re-creation
+const containerVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, ease: "easeOut" },
+  },
+  exit: { opacity: 0, y: -20, transition: { duration: 0.3 } },
+};
+
+// Step items configuration - moved outside to prevent re-creation
+const stepItems = [
+  { label: "Personal", icon: <FiUser /> },
+  { label: "Academic", icon: <FiBriefcase /> },
+  { label: "Profiles", icon: <FiCode /> },
+];
+
+const Motion = motion;
+
 const Register = () => {
-  const { depts, years } = useMeta();
+  const { depts, years: _years } = useMeta();
   const [sections, setSections] = useState([]);
   const [loadingSections, setLoadingSections] = useState(false);
   const [step, setStep] = useState(1);
@@ -58,7 +96,7 @@ const Register = () => {
           const data = await res.json();
           setSections(data);
         } catch (err) {
-          console.error("Failed to fetch sections");
+          console.error("Failed to fetch sections", err);
         }
         setLoadingSections(false);
       };
@@ -68,13 +106,11 @@ const Register = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => {
-      const newData = { ...prev, [name]: value };
-      if (name === "dept" || name === "year") {
-        newData.section = "";
-      }
-      return newData;
-    });
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+      ...(name === "dept" || name === "year" ? { section: "" } : {})
+    }));
   };
 
   const handleNext = () => {
@@ -147,36 +183,6 @@ const Register = () => {
     return <Navigate to={`/${currentUser.role}`} replace />;
   }
 
-  const InputWrapper = ({ icon: Icon, label, children }) => (
-    <div className="mb-5">
-      <label className="block text-sm font-semibold text-gray-700 mb-1.5 ml-1">
-        {label}
-      </label>
-      <div className="relative">
-        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-          <Icon size={18} />
-        </div>
-        {children}
-      </div>
-    </div>
-  );
-
-  const containerVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.5, ease: "easeOut" },
-    },
-    exit: { opacity: 0, y: -20, transition: { duration: 0.3 } },
-  };
-
-  const stepItems = [
-    { label: "Personal", icon: <FiUser /> },
-    { label: "Academic", icon: <FiBriefcase /> },
-    { label: "Profiles", icon: <FiCode /> },
-  ];
-
   return (
     <div className="min-h-screen flex flex-col bg-[#f8fafc]">
       <Navbar />
@@ -189,7 +195,7 @@ const Register = () => {
         </div>
 
         <div className="w-full max-w-2xl relative z-10">
-          <motion.div
+          <Motion.div
             initial="hidden"
             animate="visible"
             variants={containerVariants}
@@ -591,7 +597,7 @@ const Register = () => {
                 </Link>
               </p>
             </div>
-          </motion.div>
+          </Motion.div>
         </div>
       </main>
 
