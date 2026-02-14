@@ -16,6 +16,7 @@ async function scrapeHackerRankProfile(url) {
   }
 
   try {
+    const username = extractUsername(url);
     const response = await safeRequest(url);
     if (!response) {
       throw new Error("Failed to fetch HackerRank profile");
@@ -48,16 +49,12 @@ async function scrapeHackerRankProfile(url) {
       certifications.push($(element).text().trim());
     });
 
-    if (!badges.length && !certifications.length) {
-      return {
-        Username: extractUsername(url),
-        Total_Score: 0,
-        Total_Badges: 0,
-        Total_Stars: 0,
-      };
-    }
+    logger.info(
+      `[SCRAPING] HackerRank data for ${username}: ${badges.length} badges, ${totalStars} stars`
+    );
 
     return {
+      Username: username,
       Badges: badges,
       Certifications: certifications,
       Total_Badges: badges.length,

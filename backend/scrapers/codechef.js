@@ -23,7 +23,13 @@ async function scrapeCodeChefProfile(url) {
 
     // Use rotating user agents and add more headers to avoid detection
     const headers = {
-      // ...existing headers...
+      "User-Agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+      "Accept-Language": "en-US,en;q=0.9",
+      "Accept-Encoding": "gzip, deflate, br",
+      Connection: "keep-alive",
+      "Upgrade-Insecure-Requests": "1",
+      Referer: "https://www.google.com/",
     };
 
     logger.info(`[SCRAPING] Fetching CodeChef profile: ${url}`);
@@ -59,8 +65,8 @@ async function scrapeCodeChefProfile(url) {
     if (match) {
       problemsSolved = parseInt(match[1], 10);
     }
-    let badges = [];
 
+    let badges = [];
     $(".widget.badges .badge").each((index, element) => {
       const title = $(element).find(".badge__title").text().trim();
 
@@ -70,6 +76,7 @@ async function scrapeCodeChefProfile(url) {
         });
       }
     });
+
     // Try different selectors for contests participated
     let contestsParticipated = 0;
     const contestText = $(".contest-participated-count b").text().trim();
@@ -85,8 +92,9 @@ async function scrapeCodeChefProfile(url) {
     }
 
     logger.info(
-      `[SCRAPING] Successfully scraped CodeChef profile for ${username}`
+      `[SCRAPING] Successfully scraped CodeChef profile for ${username}: ${problemsSolved} problems, ${contestsParticipated} contests`
     );
+
     return {
       Username: username,
       Star: star,

@@ -103,7 +103,7 @@ async function scrapeAndUpdatePerformance(student_id, platform, username) {
         }
       } else if (platform === "geeksforgeeks") {
         performanceData = await scrapeGeeksForGeeksProfile(
-          `https://www.geeksforgeeks.org/user/${username}`
+          `https://www.geeksforgeeks.org/profile/${username}`
         );
         if (performanceData) {
           await db.query(
