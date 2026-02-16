@@ -4,7 +4,7 @@
 
 const axios = require("axios");
 const cheerio = require("cheerio");
-const { logger, extractUsername } = require("../utils");
+const { logger, extractUsername, sleep } = require("../utils");
 const config = require("../config");
 
 /**
@@ -25,6 +25,9 @@ async function scrapeGitHubProfile(url) {
   try {
     logger.info(`[SCRAPING] Fetching GitHub statistics for: ${username}`);
 
+    // Add rate limiting
+    await sleep(config.RATE_LIMIT_DELAY);
+
     // 1. Fetch public repositories via official REST API
     const apiResponse = await axios.get(
       `https://api.github.com/users/${username}`,
@@ -33,7 +36,16 @@ async function scrapeGitHubProfile(url) {
       }
     );
 
+    if (apiResponse.status !== 200) {
+      throw new Error(
+        `GitHub API returned status code: ${apiResponse.status}`
+      );
+    }
+
     const publicRepos = apiResponse.data.public_repos || 0;
+
+    // Add delay between requests to rate limiting
+    await sleep(config.RATE_LIMIT_DELAY);
 
     // 2. Fetch total contributions via fragment URL (GitHub lazy-loads this)
     const profileResponse = await axios.get(
@@ -48,11 +60,16 @@ async function scrapeGitHubProfile(url) {
       }
     );
 
+    if (profileResponse.status !== 200) {
+      throw new Error(
+        `GitHub profile page returned status code: ${profileResponse.status}`
+      );
+    }
+
     const $ = cheerio.load(profileResponse.data);
 
     // Look for the contribution count in the header
     // Use a regex to extract the count as GitHub uses inconsistent whitespace in the HTML
-    const pageText = $("h2").text().trim();
     let totalContributions = 0;
 
     // Use a robust regex to find "X contributions in the last year"
@@ -61,8 +78,9 @@ async function scrapeGitHubProfile(url) {
     );
     if (match) {
       totalContributions = parseInt(match[1].replace(/,/g, ""), 10);
-    } else if (pageText) {
+    } else {
       // Fallback to text matching if regex fails on raw HTML
+      const pageText = $("h2").text().trim();
       const textMatch = pageText.match(/([\d,]+)/);
       if (textMatch) {
         totalContributions = parseInt(textMatch[1].replace(/,/g, ""), 10);

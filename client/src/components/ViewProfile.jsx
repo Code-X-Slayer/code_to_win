@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import PlatformCard from "./ui/PlatformCard";
 import StatsCard from "./ui/StatsCard";
 import { FiCheck, FiCode, FiDownload } from "react-icons/fi";

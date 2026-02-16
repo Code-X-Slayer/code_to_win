@@ -3,7 +3,7 @@
  */
 
 const axios = require("axios");
-const { logger, extractUsername } = require("../utils");
+const { logger, extractUsername, sleep } = require("../utils");
 const config = require("../config");
 
 /**
@@ -49,6 +49,9 @@ async function fetchLeetCodeData(username) {
   };
 
   try {
+    // Add rate limiting
+    await sleep(config.RATE_LIMIT_DELAY);
+
     const response = await axios.post(
       "https://leetcode.com/graphql",
       { query },
@@ -61,6 +64,9 @@ async function fetchLeetCodeData(username) {
     if (response.status === 200) {
       const data = response.data;
       if (data.errors) {
+        logger.warn(
+          `[SCRAPING] LeetCode API returned errors: ${JSON.stringify(data.errors)}`
+        );
         return null;
       }
       return data.data;
@@ -129,9 +135,11 @@ async function scrapeLeetCodeProfile(url) {
     const rating = Math.round(contest?.rating || 0);
     const badgesList = user?.badges || [];
     const badgesCount = Array.isArray(badgesList) ? badgesList.length : 0;
-    
-    logger.info(`[SCRAPING] LeetCode data for ${username}: Rating=${rating}, Contests=${contestsAttended}, Badges=${badgesCount}`);
-    
+
+    logger.info(
+      `[SCRAPING] LeetCode data for ${username}: Rating=${rating}, Contests=${contestsAttended}, Badges=${badgesCount}`
+    );
+
     return {
       Username: username,
       Problems: problems,
@@ -140,7 +148,9 @@ async function scrapeLeetCodeProfile(url) {
       Badges: badgesCount,
     };
   } catch (error) {
-    logger.error(`[SCRAPING] Error in get_leetcode_profile: ${error.message}`);
+    logger.error(
+      `[SCRAPING] Error scraping LeetCode profile: ${error.message}`
+    );
     throw error;
   }
 }

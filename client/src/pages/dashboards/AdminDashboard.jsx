@@ -41,6 +41,9 @@ const AddFacultyModal = lazy(() =>
 const AddHODModal = lazy(() =>
   import("../../components/Modals").then((m) => ({ default: m.AddHODModal }))
 );
+const AddDeputyHODModal = lazy(() =>
+  import("../../components/Modals").then((m) => ({ default: m.AddDeputyHODModal }))
+);
 const ResetPasswordModal = lazy(() =>
   import("../../components/Modals").then((m) => ({
     default: m.ResetPasswordModal,
@@ -642,6 +645,7 @@ function AdminDashboard() {
                         { key: "addStudent", label: "Add Student" },
                         { key: "addFaculty", label: "Add Faculty" },
                         { key: "addHOD", label: "Add HOD" },
+                        { key: "addDeputyHOD", label: "Add Deputy HOD" },
                         { key: "resetPassword", label: "Reset Password" },
                         { key: "bulkImport", label: "Bulk Import" },
                       ].map((item) => (
@@ -670,6 +674,9 @@ function AdminDashboard() {
                       )}
                       {userMgmtTab === "addHOD" && (
                         <AddHODModal inline={true} />
+                      )}
+                      {userMgmtTab === "addDeputyHOD" && (
+                        <AddDeputyHODModal inline={true} />
                       )}
                       {userMgmtTab === "resetPassword" && (
                         <ResetPasswordModal />
